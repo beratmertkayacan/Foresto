@@ -18,7 +18,7 @@ export default function EOQ() {
     const aramaRef = useRef(null)
 
     useEffect(() => {
-        axios.get("http://127.0.0.1:8000/urunler/").then(r => setUrunler(r.data))
+        axios.get("/api/urunler/").then(r => setUrunler(r.data))
     }, [])
 
     // URL'de ?urun_id=X varsa otomatik seç (Navbar aramasından gelince)
@@ -42,7 +42,7 @@ export default function EOQ() {
         if (!seciliUrun) return
         setYukleniyor(true)
         setEoqData(null)
-        axios.get(`http://127.0.0.1:8000/analitik/eoq/${seciliUrun.urun_id}`)
+        axios.get(`/api/analitik/eoq/${seciliUrun.urun_id}`)
             .then(r => { setEoqData(r.data); setYukleniyor(false) })
             .catch(() => { setYukleniyor(false) })
     }, [seciliUrun])

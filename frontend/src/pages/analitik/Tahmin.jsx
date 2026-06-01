@@ -25,7 +25,7 @@ export default function Tahmin() {
     const aramaRef = useRef(null)
 
     useEffect(() => {
-        axios.get("http://127.0.0.1:8000/urunler/").then(r => setUrunler(r.data))
+        axios.get("/api/urunler/").then(r => setUrunler(r.data))
     }, [])
 
     // URL'de ?urun_id=X varsa otomatik seç (Navbar aramasından gelince)
@@ -58,11 +58,11 @@ export default function Tahmin() {
         // Not: gecmis her zaman 365 günlük pencereyle sorgulanır; aralik sadece
         // tahmin dönemini (ileriye bakış) belirler, geçmişe bakışı değil.
         const gecmisIstegi = axios.get(
-            `http://127.0.0.1:8000/analitik/gecmis/${seciliUrun.urun_id}?gun=365`
+            `/api/analitik/gecmis/${seciliUrun.urun_id}?gun=365`
         ).then(r => setGecmis(Array.isArray(r.data) ? r.data : [])).catch(() => setGecmis([]))
 
         const tahminIstegi = axios.get(
-            `http://127.0.0.1:8000/analitik/tahmin/${seciliUrun.urun_id}?gun=${aralik}`
+            `/api/analitik/tahmin/${seciliUrun.urun_id}?gun=${aralik}`
         ).then(r => {
             const veri = r.data
             if (veri?.hata) {

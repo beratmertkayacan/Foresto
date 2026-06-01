@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.database import engine, Base
 from app.routers import urunler, hareketler, analitik, auth
+from app.models import kullanici  # noqa: F401 — create_all için import edilmeli
 
 # Tablolar yoksa oluştur
 Base.metadata.create_all(bind=engine)

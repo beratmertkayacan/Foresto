@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 // ─── THEME ────────────────────────────────────────────────────────────────
 const T = {
   bg:      "#070d08",
-  primary: "#10b981",
+  primary: "#38bdf8",
   indigo:  "#6366f1",
   amber:   "#f59e0b",
   pink:    "#ec4899",
@@ -12,6 +12,12 @@ const T = {
   text:    "#ffffff",
   muted:   "rgba(255,255,255,0.42)",
   border:  "rgba(255,255,255,0.07)",
+}
+
+const GLACIER = {
+  ice: "#7dd3fc",
+  glow: "rgba(56,189,248,0.18)",
+  deep: "#0b1730",
 }
 
 // ─── HOOK: scroll trigger ────────────────────────────────────────────────
@@ -257,13 +263,13 @@ function CardABC() {
 
 // ─── HERO KART TANIMI ────────────────────────────────────────────────────
 const HERO_KART = [
-  { title:"DASHBOARD",       color:"#10b981", x:-315, y:-145, rotate:-6,  Content:CardDashboard  },
-  { title:"TALEP TAHMİN",   color:"#6366f1", x:-100, y:-148, rotate:-3,  Content:CardTahmin     },
-  { title:"STOK HAREKETLERİ", color:"#f97316", x:110,  y:-140, rotate:2, Content:CardHareketler },
-  { title:"ÜRÜN KATALOĞU",  color:"#f59e0b", x:315,  y:-143, rotate:5,  Content:CardUrunler    },
-  { title:"EOQ HESAPLAMA",  color:"#ec4899", x:-210, y:112,  rotate:-4, Content:CardEOQ        },
-  { title:"KRİTİK STOK",   color:"#ef4444", x:5,    y:115,  rotate:1,  Content:CardKritik     },
-  { title:"ABC ANALİZİ",   color:"#f59e0b", x:218,  y:108,  rotate:4,  Content:CardABC        },
+  { title:"Dashboard",       color:"#38bdf8", x:-425, y:-225, rotate:-9,  w:290, h:176 },
+  { title:"Talep Tahmin",    color:"#6366f1", x:-160, y:-245, rotate:-4,  w:278, h:188 },
+  { title:"Stok Hareketleri", color:"#f97316", x:130, y:-232, rotate:4, w:280, h:178 },
+  { title:"ABC Analizi",     color:"#f59e0b", x:420, y:-208, rotate:8,  w:285, h:176 },
+  { title:"Kritik Uyarılar", color:"#ef4444", x:-315, y:42,  rotate:-6, w:270, h:170 },
+  { title:"Urun Dagilimi",   color:"#0ea5e9", x:-15,  y:74,  rotate:2,  w:286, h:182 },
+  { title:"Raporlar",        color:"#22d3ee", x:330,  y:46,  rotate:6,  w:276, h:170 },
 ]
 
 // ─── BİREYSEL HERO KART ──────────────────────────────────────────────────
@@ -289,14 +295,32 @@ function HeroKart({ kart, index }) {
         animation:   hovered ? "none" : floatKey,
         cursor:      "pointer",
         zIndex:      hovered ? 10 : index,
-        outline:     hovered ? `2px solid rgba(16,185,129,0.6)` : "2px solid transparent",
+        outline:     hovered ? `2px solid rgba(56,189,248,0.62)` : "2px solid transparent",
         outlineOffset: 4,
         borderRadius: 18,
       }}
     >
-      <Frame title={kart.title} color={kart.color}>
-        <kart.Content />
-      </Frame>
+      <div style={{
+        width:kart.w,
+        height:kart.h,
+        borderRadius:18,
+        overflow:"hidden",
+        border:"1px solid rgba(125,211,252,0.3)",
+        boxShadow:"0 22px 90px rgba(0,0,0,0.48), 0 0 34px rgba(56,189,248,0.2)",
+        position:"relative",
+        background:"#0b1730",
+      }}>
+        <img src={kart.image} alt={kart.title} style={{ width:"100%", height:"100%", objectFit:"cover", filter:"saturate(1.08) contrast(1.03)" }} />
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(160deg, rgba(15,23,42,0.05), rgba(2,6,23,0.42))" }} />
+        <div style={{
+          position:"absolute", left:10, top:10,
+          padding:"4px 9px", borderRadius:999,
+          fontSize:10, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase",
+          color:"rgba(224,242,254,0.94)", background:"rgba(15,23,42,0.55)", border:"1px solid rgba(125,211,252,0.35)",
+        }}>
+          {kart.title}
+        </div>
+      </div>
     </div>
   )
 }
@@ -311,15 +335,26 @@ function HeroCards() {
   )
 }
 
-// ─── DEMO KULLANICILAR ───────────────────────────────────────────────────
-const KULLANICILAR = [
-  { email:"admin@smartstock.com", sifre:"smartstock2024", ad:"Berat Mert Kayacan", rol:"Yönetici",    initials:"BM" },
-  { email:"demo@smartstock.com",  sifre:"demo2024",       ad:"Demo Kullanıcı",     rol:"Görüntüleyici", initials:"DK" },
-]
+// ─── API URL ──────────────────────────────────────────────────────────────
+const API = "/api"
 
-// ─── LOGIN FORMU (yeniden kullanılabilir) ─────────────────────────────────
+// ─── SPINNER ─────────────────────────────────────────────────────────────
+function Spinner() {
+  return (
+    <span style={{
+      width:16, height:16,
+      border:"2px solid rgba(255,255,255,0.35)", borderTopColor:"#fff",
+      borderRadius:"50%", display:"inline-block",
+      animation:"spin 0.7s linear infinite"
+    }}/>
+  )
+}
+
+// ─── LOGIN FORMU ─────────────────────────────────────────────────────────
 function LoginForm({ compact = false }) {
   const navigate = useNavigate()
+  const [mod,        setMod]        = useState("giris")   // "giris" | "olustur"
+  // Giriş
   const [email,      setEmail]      = useState("")
   const [sifre,      setSifre]      = useState("")
   const [goster,     setGoster]     = useState(false)
@@ -327,149 +362,348 @@ function LoginForm({ compact = false }) {
   const [yukleniyor, setYukleniyor] = useState(false)
   const [focusE,     setFocusE]     = useState(false)
   const [focusS,     setFocusS]     = useState(false)
+  // Kullanıcı oluştur
+  const [yAd,        setYAd]        = useState("")
+  const [yEmail,     setYEmail]     = useState("")
+  const [ySifre,     setYSifre]     = useState("")
+  const [yRol,       setYRol]       = useState("görüntüleyici")
+  const [yHata,      setYHata]      = useState("")
+  const [yBasari,    setYBasari]    = useState("")
+  const [yYuk,       setYYuk]       = useState(false)
 
-  function girisYap(e) {
+  async function girisYap(e) {
     e.preventDefault()
     if (!email.trim() || !sifre) { setHata("Lütfen tüm alanları doldurunuz."); return }
     setYukleniyor(true); setHata("")
-    setTimeout(() => {
-      const k = KULLANICILAR.find(u => u.email === email.trim().toLowerCase() && u.sifre === sifre)
-      if (k) {
-        localStorage.setItem("smartstock_user", JSON.stringify({ ad:k.ad, email:k.email, rol:k.rol, initials:k.initials }))
-        navigate("/")
-      } else {
-        setHata("E-posta adresi veya şifre hatalı."); setYukleniyor(false)
-      }
-    }, 750)
+    try {
+      const res  = await fetch(`${API}/auth/login`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email: email.trim(), sifre }),
+      })
+      const veri = await res.json()
+      if (!res.ok) { setHata(veri.detail || "Giriş başarısız."); return }
+      localStorage.setItem("smartstock_token", veri.token)
+      localStorage.setItem("smartstock_user",  JSON.stringify(veri.kullanici))
+      navigate("/")
+    } catch {
+      setHata("Sunucuya ulaşılamadı. Backend çalışıyor mu?")
+    } finally {
+      setYukleniyor(false)
+    }
+  }
+
+  async function kullaniciOlustur(e) {
+    e.preventDefault()
+    if (!yAd.trim() || !yEmail.trim() || !ySifre) { setYHata("Tüm alanları doldurunuz."); return }
+    setYYuk(true); setYHata(""); setYBasari("")
+    try {
+      const res  = await fetch(`${API}/auth/kullanici-olustur`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email: yEmail.trim(), ad: yAd.trim(), sifre: ySifre, rol: yRol }),
+      })
+      const veri = await res.json()
+      if (!res.ok) { setYHata(veri.detail || "Oluşturulamadı."); return }
+      setYBasari(`"${veri.kullanici.ad}" oluşturuldu. Şimdi giriş yapabilirsiniz.`)
+      setYAd(""); setYEmail(""); setYSifre(""); setYRol("görüntüleyici")
+      setTimeout(() => setMod("giris"), 1800)
+    } catch {
+      setYHata("Sunucuya ulaşılamadı.")
+    } finally {
+      setYYuk(false)
+    }
   }
 
   const inputBase = {
     width:"100%", background:"rgba(255,255,255,0.06)",
     border:"1px solid rgba(255,255,255,0.1)", borderRadius:12,
-    padding:"13px 16px", color:"#fff", fontSize:14,
+    padding:"12px 16px", color:"#fff", fontSize:14,
     outline:"none", boxSizing:"border-box", transition:"border-color 0.2s",
   }
+  const labelSt = { fontSize:12, color:"rgba(255,255,255,0.55)", display:"block", marginBottom:6 }
+
+  const TabBtn = ({ id, label }) => (
+    <button type="button" onClick={() => { setMod(id); setHata(""); setYHata(""); setYBasari("") }}
+      style={{
+        flex:1, padding:"9px 0", background: mod===id ? "rgba(56,189,248,0.14)" : "transparent",
+        border:"none", borderBottom: mod===id ? "2px solid #38bdf8" : "2px solid transparent",
+        color: mod===id ? "#7dd3fc" : "rgba(255,255,255,0.4)",
+        fontSize:13, fontWeight:600, cursor:"pointer", transition:"all 0.2s",
+      }}
+    >{label}</button>
+  )
 
   return (
     <div>
-      <form onSubmit={girisYap} style={{ display:"flex", flexDirection:"column", gap:12 }}>
-        <div>
-          <label style={{ fontSize:12, color:"rgba(255,255,255,0.55)", display:"block", marginBottom:6 }}>E-posta</label>
-          <input
-            type="email" value={email} placeholder="ad@sirket.com" autoComplete="email"
-            onChange={e => { setEmail(e.target.value); setHata("") }}
-            onFocus={() => setFocusE(true)} onBlur={() => setFocusE(false)}
-            style={{ ...inputBase, borderColor: hata ? "#ef4444" : focusE ? "rgba(16,185,129,0.5)" : "rgba(255,255,255,0.1)" }}
-          />
-        </div>
-        <div>
-          <label style={{ fontSize:12, color:"rgba(255,255,255,0.55)", display:"block", marginBottom:6 }}>Şifre</label>
-          <div style={{ position:"relative" }}>
-            <input
-              type={goster ? "text" : "password"} value={sifre} placeholder="••••••••" autoComplete="current-password"
-              onChange={e => { setSifre(e.target.value); setHata("") }}
-              onFocus={() => setFocusS(true)} onBlur={() => setFocusS(false)}
-              style={{ ...inputBase, paddingRight:48, borderColor: hata ? "#ef4444" : focusS ? "rgba(16,185,129,0.5)" : "rgba(255,255,255,0.1)" }}
+      <div style={{ display:"flex", marginBottom:20, borderBottom:"1px solid rgba(255,255,255,0.07)" }}>
+        <TabBtn id="giris"   label="Giriş Yap" />
+        <TabBtn id="olustur" label="Kullanıcı Oluştur" />
+      </div>
+
+      {mod === "giris" && (
+        <form onSubmit={girisYap} style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <div>
+            <label style={labelSt}>E-posta</label>
+            <input type="email" value={email} placeholder="ad@sirket.com" autoComplete="email"
+              onChange={e => { setEmail(e.target.value); setHata("") }}
+              onFocus={() => setFocusE(true)} onBlur={() => setFocusE(false)}
+            style={{ ...inputBase, borderColor: hata ? "#ef4444" : focusE ? "rgba(56,189,248,0.55)" : "rgba(255,255,255,0.1)" }}
             />
-            <button type="button" onClick={() => setGoster(v => !v)} style={{
-              position:"absolute", right:14, top:"50%", transform:"translateY(-50%)",
-              background:"none", border:"none", color:"rgba(255,255,255,0.4)",
-              cursor:"pointer", fontSize:14, padding:0, lineHeight:1
-            }}>{goster ? "🙈" : "👁️"}</button>
           </div>
-        </div>
-
-        {hata && (
-          <div style={{
-            padding:"10px 14px", borderRadius:9,
-            background:"rgba(239,68,68,0.1)", border:"1px solid rgba(239,68,68,0.2)",
-            color:"#fca5a5", fontSize:13
-          }}>{hata}</div>
-        )}
-
-        <button type="submit" disabled={yukleniyor} style={{
-          width:"100%", padding:"14px", background:"#10b981",
-          border:"none", borderRadius:12, color:"#fff",
-          fontWeight:700, fontSize:15,
-          cursor: yukleniyor ? "not-allowed" : "pointer",
-          opacity: yukleniyor ? 0.7 : 1,
-          boxShadow:"0 4px 20px rgba(16,185,129,0.3)",
-          transition:"opacity 0.2s",
-          display:"flex", alignItems:"center", justifyContent:"center", gap:8
-        }}>
-          {yukleniyor
-            ? <><span style={{
-                width:16, height:16,
-                border:"2px solid rgba(255,255,255,0.35)", borderTopColor:"#fff",
-                borderRadius:"50%", display:"inline-block",
-                animation:"spin 0.7s linear infinite"
-              }}/> Giriş yapılıyor...</>
-            : "Giriş Yap →"
-          }
-        </button>
-      </form>
-
-      {!compact && (
-        <div style={{ marginTop:20 }}>
-          <div style={{
-            background:"rgba(255,255,255,0.02)", border:"1px solid rgba(255,255,255,0.07)",
-            borderRadius:14, overflow:"hidden"
+          <div>
+            <label style={labelSt}>Şifre</label>
+            <div style={{ position:"relative" }}>
+              <input type={goster ? "text" : "password"} value={sifre} placeholder="••••••••" autoComplete="current-password"
+                onChange={e => { setSifre(e.target.value); setHata("") }}
+                onFocus={() => setFocusS(true)} onBlur={() => setFocusS(false)}
+                style={{ ...inputBase, paddingRight:48, borderColor: hata ? "#ef4444" : focusS ? "rgba(56,189,248,0.55)" : "rgba(255,255,255,0.1)" }}
+              />
+              <button type="button" onClick={() => setGoster(v => !v)} style={{
+                position:"absolute", right:14, top:"50%", transform:"translateY(-50%)",
+                background:"none", border:"none", color:"rgba(255,255,255,0.4)", cursor:"pointer", fontSize:14, padding:0
+              }}>{goster ? "🙈" : "👁️"}</button>
+            </div>
+          </div>
+          {hata && (
+            <div style={{ padding:"10px 14px", borderRadius:9, background:"rgba(239,68,68,0.1)", border:"1px solid rgba(239,68,68,0.2)", color:"#fca5a5", fontSize:13 }}>
+              {hata}
+            </div>
+          )}
+          <button type="submit" disabled={yukleniyor} style={{
+            width:"100%", padding:"14px", background:"linear-gradient(90deg,#0ea5e9,#38bdf8)", border:"none", borderRadius:12,
+            color:"#fff", fontWeight:700, fontSize:15,
+            cursor: yukleniyor ? "not-allowed" : "pointer", opacity: yukleniyor ? 0.7 : 1,
+            boxShadow:"0 8px 28px rgba(14,165,233,0.4)", transition:"opacity 0.2s",
+            display:"flex", alignItems:"center", justifyContent:"center", gap:8
           }}>
-            <div style={{
-              padding:"10px 16px", borderBottom:"1px solid rgba(255,255,255,0.05)",
-              fontSize:10, fontWeight:600, color:"rgba(255,255,255,0.3)",
-              letterSpacing:"0.08em", textTransform:"uppercase"
-            }}>Demo Hesapları — Tıkla otomatik doldur</div>
-            {KULLANICILAR.map(k => (
-              <DemoKartButon key={k.email} k={k} onSelect={() => { setEmail(k.email); setSifre(k.sifre); setHata("") }} />
-            ))}
+            {yukleniyor ? <><Spinner/> Giriş yapılıyor...</> : "Giriş Yap →"}
+          </button>
+          <p style={{ fontSize:10, color:"rgba(255,255,255,0.2)", textAlign:"center", marginTop:4 }}>
+            Erişim yalnızca yetkili kullanıcılara açıktır.
+          </p>
+        </form>
+      )}
+
+      {mod === "olustur" && (
+        <form onSubmit={kullaniciOlustur} style={{ display:"flex", flexDirection:"column", gap:12 }}>
+          <div>
+            <label style={labelSt}>Ad Soyad</label>
+            <input type="text" value={yAd} placeholder="Ahmet Yılmaz"
+              onChange={e => { setYAd(e.target.value); setYHata("") }}
+              style={{ ...inputBase }}
+            />
           </div>
-        </div>
+          <div>
+            <label style={labelSt}>E-posta</label>
+            <input type="email" value={yEmail} placeholder="ad@sirket.com"
+              onChange={e => { setYEmail(e.target.value); setYHata("") }}
+              style={{ ...inputBase }}
+            />
+          </div>
+          <div>
+            <label style={labelSt}>Şifre</label>
+            <input type="password" value={ySifre} placeholder="En az 6 karakter"
+              onChange={e => { setYSifre(e.target.value); setYHata("") }}
+              style={{ ...inputBase }}
+            />
+          </div>
+          <div>
+            <label style={labelSt}>Rol</label>
+            <select value={yRol} onChange={e => setYRol(e.target.value)}
+              style={{ ...inputBase, cursor:"pointer" }}>
+              <option value="görüntüleyici">Görüntüleyici</option>
+              <option value="yönetici">Yönetici</option>
+            </select>
+          </div>
+          {yHata && (
+            <div style={{ padding:"10px 14px", borderRadius:9, background:"rgba(239,68,68,0.1)", border:"1px solid rgba(239,68,68,0.2)", color:"#fca5a5", fontSize:13 }}>
+              {yHata}
+            </div>
+          )}
+          {yBasari && (
+            <div style={{ padding:"10px 14px", borderRadius:9, background:"rgba(56,189,248,0.14)", border:"1px solid rgba(56,189,248,0.28)", color:"#7dd3fc", fontSize:13 }}>
+              ✓ {yBasari}
+            </div>
+          )}
+          <button type="submit" disabled={yYuk} style={{
+            width:"100%", padding:"13px", background:"rgba(56,189,248,0.16)",
+            border:"1px solid rgba(56,189,248,0.38)", borderRadius:12,
+            color:"#7dd3fc", fontWeight:700, fontSize:14,
+            cursor: yYuk ? "not-allowed" : "pointer", opacity: yYuk ? 0.7 : 1,
+            transition:"all 0.2s", display:"flex", alignItems:"center", justifyContent:"center", gap:8
+          }}>
+            {yYuk ? <><Spinner/> Oluşturuluyor...</> : "Kullanıcı Oluştur"}
+          </button>
+        </form>
       )}
     </div>
   )
 }
-
-// Demo kart butonu — hover için kendi state'i var
-function DemoKartButon({ k, onSelect }) {
-  const [hover, setHover] = useState(false)
+// ─── APP BENTO (uygulama içi görünüm) ────────────────────────────────────
+function BentoCard({ children, color, title, style = {} }) {
+  const [hovered, setHovered] = useState(false)
   return (
-    <button type="button" onClick={onSelect}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
-        width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between",
-        padding:"12px 16px", background: hover ? "rgba(16,185,129,0.07)" : "none",
-        border:"none", borderBottom:"1px solid rgba(255,255,255,0.04)",
-        cursor:"pointer", textAlign:"left", transition:"background 0.15s"
+        background:"rgba(255,255,255,0.03)",
+        border: hovered ? "1px solid rgba(255,255,255,0.18)" : "1px solid rgba(255,255,255,0.07)",
+        borderRadius:14, overflow:"hidden",
+        transform: hovered ? "translateY(-4px) scale(1.025)" : "none",
+        transition:"all 0.22s ease",
+        cursor:"default",
+        ...style,
+      }}
+    >
+      <div style={{
+        padding:"7px 11px", borderBottom:"1px solid rgba(255,255,255,0.06)",
+        display:"flex", alignItems:"center", gap:7,
       }}>
-      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-        <div style={{
-          width:32, height:32, borderRadius:"50%",
-          background:"linear-gradient(135deg,#10b981,#059669)",
-          display:"flex", alignItems:"center", justifyContent:"center",
-          fontSize:11, fontWeight:700, color:"#fff", flexShrink:0
-        }}>{k.initials}</div>
-        <div>
-          <div style={{ fontSize:13, fontWeight:600, color:"#fff" }}>{k.ad}</div>
-          <div style={{ fontSize:11, color:"rgba(255,255,255,0.4)" }}>{k.rol}</div>
+        <span style={{ width:7, height:7, borderRadius:"50%", background:color, flexShrink:0 }}/>
+        <span style={{ fontSize:9, fontWeight:700, letterSpacing:"0.1em", color:"rgba(255,255,255,0.45)", textTransform:"uppercase" }}>
+          {title}
+        </span>
+      </div>
+      <div style={{ padding:"9px 11px" }}>{children}</div>
+    </div>
+  )
+}
+
+function AppBento() {
+  const miniKpi = { background:"rgba(255,255,255,0.05)", borderRadius:8, padding:"5px 7px" }
+  const kpiVal  = (c) => ({ fontSize:13, fontWeight:700, color:c })
+  const kpiLbl  = { fontSize:9, color:"rgba(255,255,255,0.38)", marginTop:1 }
+  const row     = { display:"flex", justifyContent:"space-between", alignItems:"center",
+                    padding:"4px 0", borderBottom:"1px solid rgba(255,255,255,0.05)",
+                    fontSize:10, color:"rgba(255,255,255,0.55)" }
+  const badge   = (c,bg) => ({ fontSize:9, padding:"1px 6px", borderRadius:5, fontWeight:600, color:c, background:bg })
+
+  return (
+    <div style={{
+      display:"grid",
+      gridTemplateColumns:"repeat(6,1fr)",
+      gridTemplateRows:"auto auto",
+      gap:8,
+      padding:"16px 24px",
+      width:"100%",
+    }}>
+
+      {/* Dashboard — geniş */}
+      <BentoCard title="Dashboard" color="#38bdf8" style={{ gridColumn:"span 4" }}>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:5, marginBottom:7 }}>
+          {[
+            { v:"284", l:"Ürün",       c:"#38bdf8" },
+            { v:"12",  l:"Kritik",     c:"#ef4444" },
+            { v:"₺2.4M",l:"Stok Değ.", c:"#f59e0b" },
+            { v:"%38", l:"Ort. Marj",  c:"#10b981" },
+          ].map(k => (
+            <div key={k.l} style={miniKpi}>
+              <div style={kpiVal(k.c)}>{k.v}</div>
+              <div style={kpiLbl}>{k.l}</div>
+            </div>
+          ))}
         </div>
-      </div>
-      <div style={{ textAlign:"right" }}>
-        <div style={{ fontSize:10, fontFamily:"monospace", color:"rgba(255,255,255,0.35)" }}>{k.email}</div>
-        <div style={{ fontSize:10, fontFamily:"monospace", color:"rgba(255,255,255,0.2)" }}>{k.sifre}</div>
-      </div>
-    </button>
+        <svg width="100%" height="30" viewBox="0 0 280 30" preserveAspectRatio="none">
+          <polyline points="0,26 40,20 80,23 120,13 160,16 200,8 240,11 280,6"
+            fill="none" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round"/>
+          <polygon points="0,26 40,20 80,23 120,13 160,16 200,8 240,11 280,6 280,30 0,30"
+            fill="#38bdf8" opacity="0.07"/>
+        </svg>
+      </BentoCard>
+
+      {/* Talep Tahmini */}
+      <BentoCard title="Talep Tahmini" color="#6366f1" style={{ gridColumn:"span 2" }}>
+        <svg width="100%" height="34" viewBox="0 0 110 34" preserveAspectRatio="none">
+          <polyline points="0,28 28,22 55,25 78,16 90,18"
+            fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round"/>
+          <polyline points="90,18 100,12 110,8"
+            fill="none" stroke="#6366f1" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.5"/>
+        </svg>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:4, marginTop:5 }}>
+          <div style={miniKpi}><div style={kpiVal("#6366f1")}>133</div><div style={kpiLbl}>30g Tahmin</div></div>
+          <div style={miniKpi}><div style={kpiVal("#fff")}>%90.9</div><div style={kpiLbl}>Doğruluk</div></div>
+        </div>
+      </BentoCard>
+
+      {/* Hareketler */}
+      <BentoCard title="Hareketler" color="#10b981" style={{ gridColumn:"span 2" }}>
+        {[
+          { ad:"Seramik Karo",   m:"+500", g:true  },
+          { ad:"Ahşap Laminat",  m:"-120", g:false },
+          { ad:"Vinil Döşeme",   m:"-85",  g:false },
+          { ad:"Granit Tezgah",  m:"+200", g:true  },
+        ].map(h => (
+          <div key={h.ad} style={row}>
+            <span>{h.ad}</span>
+            <span style={badge(h.g?"#10b981":"#ef4444", h.g?"rgba(16,185,129,0.12)":"rgba(239,68,68,0.12)")}>{h.m}</span>
+          </div>
+        ))}
+      </BentoCard>
+
+      {/* EOQ */}
+      <BentoCard title="EOQ Analizi" color="#ec4899" style={{ gridColumn:"span 2" }}>
+        <div style={{ textAlign:"center", padding:"4px 0 6px" }}>
+          <div style={{ fontSize:24, fontWeight:900, color:"#ec4899", letterSpacing:"-1px", lineHeight:1 }}>342</div>
+          <div style={{ fontSize:9, color:"rgba(255,255,255,0.35)", marginTop:2 }}>optimal sipariş / adet</div>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:4 }}>
+          <div style={miniKpi}><div style={kpiVal("#fff")}>4,200</div><div style={kpiLbl}>Yıllık talep</div></div>
+          <div style={miniKpi}><div style={kpiVal("#fff")}>₺85</div><div style={kpiLbl}>Sipariş mlt.</div></div>
+        </div>
+      </BentoCard>
+
+      {/* Ürün Yönetimi */}
+      <BentoCard title="Ürün Yönetimi" color="#f59e0b" style={{ gridColumn:"span 2" }}>
+        {[
+          { ad:"Seramik Karo",  stok:"1,240", kritik:false },
+          { ad:"Ahşap Laminat", stok:"890",   kritik:false },
+          { ad:"Vinil Döşeme",  stok:"42",    kritik:true  },
+          { ad:"Granit Tezgah", stok:"8",     kritik:true  },
+        ].map(u => (
+          <div key={u.ad} style={row}>
+            <span>{u.ad}</span>
+            <span style={{ fontSize:10, fontWeight:700, color: u.kritik ? "#ef4444" : "rgba(255,255,255,0.7)" }}>
+              {u.stok}{u.kritik ? " ⚠" : ""}
+            </span>
+          </div>
+        ))}
+      </BentoCard>
+
+      {/* ABC */}
+      <BentoCard title="ABC Raporu" color="#22c55e" style={{ gridColumn:"span 2" }}>
+        {[
+          { sınıf:"A", pct:70, c:"#22c55e" },
+          { sınıf:"B", pct:20, c:"#f59e0b" },
+          { sınıf:"C", pct:10, c:"rgba(255,255,255,0.3)" },
+        ].map(s => (
+          <div key={s.sınıf} style={{ display:"flex", alignItems:"center", gap:7, padding:"3px 0" }}>
+            <span style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,0.7)", width:10 }}>{s.sınıf}</span>
+            <div style={{ flex:1, height:4, borderRadius:3, background:"rgba(255,255,255,0.08)", overflow:"hidden" }}>
+              <div style={{ width:`${s.pct}%`, height:"100%", borderRadius:3, background:s.c }}/>
+            </div>
+            <span style={{ fontSize:9, color:"rgba(255,255,255,0.45)", width:24 }}>%{s.pct}</span>
+          </div>
+        ))}
+        <div style={{ marginTop:6 }}>
+          <span style={{ fontSize:9, padding:"2px 7px", borderRadius:5, background:"rgba(34,197,94,0.12)", color:"#22c55e", fontWeight:600 }}>
+            34 A-sınıfı ürün
+          </span>
+        </div>
+      </BentoCard>
+
+    </div>
   )
 }
 
 // ─── MARQUEE ──────────────────────────────────────────────────────────────
 const MARQUEE_ITEMS = [
-  "🤖 Ridge Regression", "📦 Stok Yönetimi", "📐 EOQ Hesaplama",
-  "📊 ABC Analizi", "⚠️ Kritik Stok Uyarısı", "📈 Talep Tahmini",
-  "🔄 Giriş / Çıkış Takibi", "🐘 PostgreSQL", "⚡ FastAPI",
-  "⚛️ React 18", "🎯 %90+ Model Doğruluğu", "📅 30/60/90 Gün Tahmin",
-  "🏭 Tedarikçi Takibi", "💰 Maliyet Optimizasyonu",
+  "📦 Stok Yönetimi", "📐 EOQ Hesaplama", "📊 ABC Analizi",
+  "⚠️ Kritik Stok Uyarısı", "📈 Talep Tahmini", "🔄 Giriş / Çıkış Takibi",
+  "🎯 %90+ Model Doğruluğu", "📅 30/60/90 Gün Tahmin",
+  "🏭 Tedarikçi Takibi", "💰 Maliyet Optimizasyonu", "📉 Pareto Analizi",
+  "🔔 Otomatik Uyarılar", "📋 Sipariş Yönetimi", "🧮 Kâr Marjı Takibi",
 ]
 
 // ─── SCROLLYTELLING — tek section bileşeni ────────────────────────────────
@@ -737,50 +971,64 @@ export default function Login() {
         @keyframes floatB { 0%,100%{transform:translateY(0) rotate(1.5deg)} 50%{transform:translateY(8px) rotate(1.5deg)} }
         @keyframes spin   { to{transform:rotate(360deg)} }
         *{box-sizing:border-box; margin:0; padding:0}
+        .hero-shell{display:flex;height:calc(100vh - 74px);min-height:620px}
+        .hero-left{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column}
+        .hero-right{
+          width:clamp(380px,32vw,520px);flex-shrink:0;
+          background:linear-gradient(165deg,rgba(9,18,34,0.98) 0%, rgba(10,24,42,0.98) 65%, rgba(7,14,30,0.98) 100%);
+          border-left:1px solid rgba(125,211,252,0.2);
+          display:flex;flex-direction:column;justify-content:center;padding:48px 40px;overflow-y:auto;
+          box-shadow:inset 0 0 120px rgba(14,165,233,0.08);
+        }
+        @media (max-width: 1200px){
+          .hero-right{width:clamp(350px,38vw,460px);padding:38px 30px}
+        }
+        @media (max-width: 980px){
+          .hero-shell{flex-direction:column;height:auto;min-height:70vh}
+          .hero-left{min-height:68vh}
+          .hero-right{width:100%;border-left:none;border-top:1px solid rgba(125,211,252,0.2)}
+        }
       `}</style>
 
       {/* ── 1. HERO ──────────────────────────────────────────────────── */}
-      <section style={{ display:"flex", height:"100vh", minHeight:700 }}>
+      <section className="hero-shell">
 
         {/* SOL */}
-        <div style={{
-          flex:1, position:"relative", overflow:"hidden",
-          background:"linear-gradient(150deg,#080f09 0%,#0b1c0f 50%,#060e07 100%)",
-          display:"flex", flexDirection:"column",
+        <div className="hero-left" style={{
+          background:"linear-gradient(160deg,#071123 0%,#0b1b3a 45%,#050c1d 100%)",
         }}>
           <div style={{
             position:"absolute", inset:0, pointerEvents:"none",
-            backgroundImage:"linear-gradient(rgba(255,255,255,0.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.035) 1px,transparent 1px)",
-            backgroundSize:"52px 52px",
+            backgroundImage:"linear-gradient(rgba(125,211,252,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(125,211,252,0.06) 1px,transparent 1px)",
+            backgroundSize:"48px 48px",
           }}/>
           <div style={{
-            position:"absolute", top:"30%", left:"40%",
-            width:500, height:500, borderRadius:"50%", pointerEvents:"none",
-            background:"radial-gradient(circle,rgba(16,185,129,0.13) 0%,transparent 70%)",
+            position:"absolute", top:"32%", left:"44%",
+            width:540, height:540, borderRadius:"50%", pointerEvents:"none",
+            background:`radial-gradient(circle,${GLACIER.glow} 0%,transparent 70%)`,
             transform:"translate(-50%,-50%)"
+          }}/>
+          <div style={{
+            position:"absolute", bottom:"16%", left:"22%",
+            width:420, height:420, borderRadius:"50%", pointerEvents:"none",
+            background:"radial-gradient(circle,rgba(59,130,246,0.16) 0%,transparent 72%)",
+            transform:"translate(-50%,50%)"
           }}/>
           <div style={{ position:"relative", zIndex:2, padding:"28px 32px" }}>
             <span style={{
               fontSize:10, fontWeight:700, letterSpacing:"0.12em",
-              color:T.primary, textTransform:"uppercase",
-              padding:"5px 12px", border:`1px solid ${T.primary}40`,
-              borderRadius:20, background:`${T.primary}10`
+              color:GLACIER.ice, textTransform:"uppercase",
+              padding:"5px 12px", border:`1px solid ${GLACIER.ice}50`,
+              borderRadius:20, background:"rgba(125,211,252,0.12)"
             }}>Uygulama İçi Görünüm</span>
           </div>
-          <div style={{ flex:1, position:"relative", zIndex:2 }}>
-            <HeroCards />
+          <div style={{ flex:1, position:"relative", zIndex:2, display:"flex", alignItems:"center" }}>
+            <AppBento />
           </div>
         </div>
 
         {/* SAĞ — Login */}
-        <div style={{
-          width:480, flexShrink:0,
-          background:"rgba(5,10,6,0.98)",
-          borderLeft:"1px solid rgba(255,255,255,0.07)",
-          display:"flex", flexDirection:"column",
-          justifyContent:"center",
-          padding:"48px 40px", overflowY:"auto"
-        }}>
+        <div className="hero-right">
           {/* Logo */}
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
             <div style={{
@@ -832,7 +1080,7 @@ export default function Login() {
           <LoginForm />
 
           <p style={{ fontSize:11, color:"rgba(255,255,255,0.18)", textAlign:"center", marginTop:24 }}>
-            © 2024 SmartStock · Berat Mert Kayacan
+            SmartStock
           </p>
         </div>
       </section>
@@ -840,7 +1088,7 @@ export default function Login() {
       {/* ── 2. MARQUEE ───────────────────────────────────────────────── */}
       <section style={{
         borderTop:`1px solid ${T.border}`, borderBottom:`1px solid ${T.border}`,
-        background:"rgba(255,255,255,0.015)", padding:"14px 0", overflow:"hidden"
+        background:"rgba(255,255,255,0.02)", padding:"12px 0", overflow:"hidden", minHeight:74
       }}>
         <div style={{ display:"flex", animation:"marq 28s linear infinite", width:"max-content" }}>
           {[...MARQUEE_ITEMS, ...MARQUEE_ITEMS].map((item,i) => (
@@ -855,7 +1103,8 @@ export default function Login() {
       </section>
 
       {/* ── 3. SCROLLYTELLING ────────────────────────────────────────── */}
-      <section style={{ padding:"100px 80px", maxWidth:1200, margin:"0 auto" }}>
+      <section style={{ padding:"100px 80px", maxWidth:1200, margin:"0 auto",
+        background:"linear-gradient(180deg, transparent 0%, rgba(56,189,248,0.04) 40%, rgba(56,189,248,0.04) 60%, transparent 100%)" }}>
         <div style={{ textAlign:"center", marginBottom:72 }}>
           <h2 style={{ fontSize:"clamp(28px,3.5vw,44px)", fontWeight:900, letterSpacing:"-1px" }}>
             Tek platformda tam kontrol
@@ -874,7 +1123,8 @@ export default function Login() {
       {/* ── 4. BENTO GRID ────────────────────────────────────────────── */}
       <section style={{
         padding:"80px 80px", maxWidth:1200, margin:"0 auto",
-        borderTop:`1px solid ${T.border}`
+        borderTop:`1px solid ${T.border}`,
+        background:"rgba(56,189,248,0.03)"
       }}>
         <div style={{ textAlign:"center", marginBottom:48 }}>
           <h2 style={{ fontSize:"clamp(24px,3vw,38px)", fontWeight:900, letterSpacing:"-1px" }}>
@@ -900,7 +1150,7 @@ export default function Login() {
           Hemen başlayın
         </h2>
         <p style={{ fontSize:14, color:T.muted, marginBottom:40 }}>
-          Demo hesabı ile hiçbir kurulum gerektirmeden deneyin.
+          Dakikalar içinde giriş yapıp tüm özellikleri deneyimleyin.
         </p>
         <div style={{
           maxWidth:480, margin:"0 auto",
@@ -910,7 +1160,7 @@ export default function Login() {
           <LoginForm compact />
         </div>
         <p style={{ fontSize:11, color:"rgba(255,255,255,0.18)", marginTop:40 }}>
-          © 2024 SmartStock · Berat Mert Kayacan tarafından geliştirilmiştir
+          SmartStock
         </p>
       </section>
     </div>

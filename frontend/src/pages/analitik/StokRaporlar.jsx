@@ -40,17 +40,17 @@ export default function StokRaporlar() {
         // Her endpoint'i bağımsız çek — biri hata verse diğerleri çalışsın
         const yukle = async () => {
             try {
-                const ur = await axios.get("http://127.0.0.1:8000/urunler/")
+                const ur = await axios.get("/api/urunler/")
                 setUrunler(ur.data)
             } catch { /* ürünler yüklenemedi */ }
 
             try {
-                const kr = await axios.get("http://127.0.0.1:8000/urunler/kritik")
+                const kr = await axios.get("/api/urunler/kritik")
                 setKritikler(kr.data)
             } catch { /* kritikler yüklenemedi */ }
 
             try {
-                const db = await axios.get("http://127.0.0.1:8000/analitik/dashboard")
+                const db = await axios.get("/api/analitik/dashboard")
                 setDashboard(db.data)
             } catch { /* dashboard yüklenemedi — grafik kısmı gizlenir */ }
 

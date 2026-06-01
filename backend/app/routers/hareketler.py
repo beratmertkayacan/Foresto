@@ -92,10 +92,10 @@ def hareket_toplam(db: Session = Depends(get_db)):
 
 
 @router.get("/")
-def hareket_listesi(limit: int = 200, db: Session = Depends(get_db)):
+def hareket_listesi(limit: int = 30000, db: Session = Depends(get_db)):
     hareketler = db.query(StokHareketi)\
         .options(joinedload(StokHareketi.urun))\
-        .order_by(StokHareketi.hareket_id.desc())\
+        .order_by(StokHareketi.tarih.desc(), StokHareketi.hareket_id.desc())\
         .limit(limit).all()
     return [hareket_to_dict(h) for h in hareketler]
 
