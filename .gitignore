@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+*.egg-info/
+
+# ML modelleri
+backend/app/ml/models/
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# IDE
+.vscode/settings.json
+*.log
+
+# Geçici utility scriptleri
+backend/tarihleri_guncelle.py
+backend/veri_analiz.py
+backend/veri_temizle.py
+backend/demo_*.py
+backend/guncelle_demo.py
+
+# Büyük data dosyaları (import için kullanıldı, repo'da tutulmaz)
+backend/data/stok_hareketleri.csv
+backend/data/siparisler.csv
+backend/data/tedarikciler.csv
