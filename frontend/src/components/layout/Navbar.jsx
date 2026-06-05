@@ -1,28 +1,27 @@
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Sun, Moon, BarChart2, Package, TrendingUp, ArrowLeftRight, Globe, Bell, Search, X, LogOut, User, Settings, ChevronDown, TrendingDown, FileText, AlertTriangle, Calculator } from "lucide-react"
-import axios from "axios"
+import axios from "../../api/client.js"
+import Logo from "../common/Logo.jsx"
+import { STORAGE_KEYS } from "../../config/constants.js"
+import { useAuth } from "../../context/AuthContext.jsx"
+import { NAV_TR, NAV_EN, NAV_DE } from "../../config/uiCopy.js"
 
-const API = "http://127.0.0.1:8000"
-
-const çeviriler = {
-  tr: { dashboard: "Genel Bakış", urunler: "Ürünler", analitik: "Analitik", hareketler: "Hareketler", tahmin: "Talep Tahmini", eoq: "EOQ Hesaplama", stok: "Stok & Raporlar" },
-  en: { dashboard: "Overview",    urunler: "Products", analitik: "Analytics", hareketler: "Movements", tahmin: "Demand Forecast", eoq: "EOQ Calculator", stok: "Stock & Reports" },
-  de: { dashboard: "Übersicht",   urunler: "Produkte", analitik: "Analytik", hareketler: "Bewegungen", tahmin: "Nachfrageprognose", eoq: "EOQ Rechner", stok: "Lager & Berichte" },
-}
+const çeviriler = { tr: NAV_TR, en: NAV_EN, de: NAV_DE }
 
 export default function Navbar() {
   const location  = useLocation()
   const navigate  = useNavigate()
+  const { signOut } = useAuth()
 
   // Giriş yapmış kullanıcıyı localStorage'dan oku
   const kullanici = (() => {
-    try { return JSON.parse(localStorage.getItem("smartstock_user")) } catch { return null }
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEYS.user)) } catch { return null }
   })()
 
   function cikisYap() {
-    localStorage.removeItem("smartstock_user")
-    navigate("/login")
+    signOut()
+    navigate("/login", { replace: true })
   }
 
   const [dark, setDark]               = useState(false)
@@ -49,7 +48,7 @@ export default function Navbar() {
 
   // ── Kritik stok yükle + pencere odaklanınca yenile ────────────────────────
   const kritikYukle = useCallback(() => {
-    axios.get(`${API}/urunler/kritik`).then(r => setKritikUrunler(r.data)).catch(() => {})
+    axios.get("/urunler/kritik").then(r => setKritikUrunler(r.data)).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -61,7 +60,7 @@ export default function Navbar() {
   // ── Arama ─────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (arama.length < 2) { setAramaSonuclari([]); return }
-    axios.get(`${API}/urunler/`).then(r => {
+    axios.get("/urunler/").then(r => {
       const q = arama.toLowerCase()
       setAramaSonuclari(
         r.data.filter(u =>
@@ -88,9 +87,9 @@ export default function Navbar() {
   const analitikAktif = location.pathname.startsWith("/analitik")
 
   const analitikAltSayfalar = [
-    { path: "/analitik/tahmin", label: t.tahmin, icon: <TrendingUp size={16} />,   aciklama: "Regresyon ile gelecek talep tahmini", renk: "blue"   },
-    { path: "/analitik/eoq",    label: t.eoq,    icon: <TrendingDown size={16} />, aciklama: "Optimal sipariş miktarı hesaplama",    renk: "purple" },
-    { path: "/analitik/stok",   label: t.stok,   icon: <FileText size={16} />,     aciklama: "ABC analizi, kategori dağılımı ve raporlar", renk: "green" },
+    { path: "/analitik/tahmin", label: t.tahmin, icon: <TrendingUp size={16} />,   aciklama: "Satış geçmişine göre gelecek talep", renk: "blue"   },
+    { path: "/analitik/eoq",    label: t.siparis, icon: <TrendingDown size={16} />, aciklama: "Ne kadar ve ne zaman sipariş vereceğiniz", renk: "purple" },
+    { path: "/analitik/stok",   label: t.raporlar, icon: <FileText size={16} />,   aciklama: "Ürün önceliği ve stok raporları", renk: "green" },
   ]
 
   const renkMap = {
@@ -100,48 +99,43 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-8 py-0 flex items-center justify-between shadow-sm sticky top-0 z-50 gap-6">
+    <nav className="ss-nav h-16 px-8 py-0 flex items-center justify-between sticky top-0 z-50 gap-6">
 
       {/* Logo */}
-      <div className="flex items-center gap-3 py-4 shrink-0 group cursor-pointer" onClick={() => navigate("/")}>
-        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">
-          <BarChart2 size={16} className="text-white" />
-        </div>
-        <span className="text-lg font-bold text-gray-900 dark:text-white tracking-tight">
-          Smart<span className="text-blue-600">Stock</span>
-        </span>
-        <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full font-medium">AI</span>
-      </div>
+      <Link
+        to="/"
+        className="py-4 shrink-0 group transition-transform duration-200 group-hover:scale-[1.02] no-underline"
+        aria-label="Foresto — Genel Bakış"
+      >
+        <Logo variant="lockup" size="sm" theme="dark" decorative />
+      </Link>
 
       {/* Navigasyon */}
       <div className="flex items-center h-full shrink-0">
 
         <Link to="/"
-          className={`flex items-center gap-2 px-4 py-5 text-sm font-medium transition-all duration-200 border-b-2 hover:scale-105
-            ${location.pathname === "/" ? "border-blue-600 text-blue-600 dark:text-blue-400" : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300"}`}>
+          className={`flex items-center gap-2 px-4 py-5 text-sm font-medium transition-all duration-200 border-b-2 hover:scale-105 ss-nav-link ${location.pathname === "/" ? "ss-nav-link--active" : ""}`}>
           <BarChart2 size={16} />{t.dashboard}
         </Link>
 
         <Link to="/urunler"
-          className={`flex items-center gap-2 px-4 py-5 text-sm font-medium transition-all duration-200 border-b-2 hover:scale-105
-            ${location.pathname === "/urunler" ? "border-blue-600 text-blue-600 dark:text-blue-400" : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300"}`}>
+          className={`flex items-center gap-2 px-4 py-5 text-sm font-medium transition-all duration-200 border-b-2 hover:scale-105 ss-nav-link ${location.pathname === "/urunler" ? "ss-nav-link--active" : ""}`}>
           <Package size={16} />{t.urunler}
         </Link>
 
         {/* Analitik Dropdown */}
         <div className="relative" ref={analitikRef}>
           <button onClick={() => setAnalitikMenu(v => !v)}
-            className={`flex items-center gap-2 px-4 py-5 text-sm font-medium transition-all duration-200 border-b-2 hover:scale-105
-              ${analitikAktif ? "border-blue-600 text-blue-600 dark:text-blue-400" : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300"}`}>
+            className={`flex items-center gap-2 px-4 py-5 text-sm font-medium transition-all duration-200 border-b-2 hover:scale-105 ss-nav-link ${analitikAktif ? "ss-nav-link--active" : ""}`}>
             <TrendingUp size={16} />
-            {t.analitik}
+            {t.ongoruler}
             <ChevronDown size={14} className={`transition-transform duration-200 ${analitikMenu ? "rotate-180" : ""}`} />
           </button>
 
           {analitikMenu && (
-            <div className="absolute top-full left-0 mt-0 w-72 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden z-50">
+            <div className="absolute top-full left-0 mt-0 w-72 ss-panel overflow-hidden z-50">
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700">
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Analitik Modülleri</p>
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Modüller</p>
               </div>
               {analitikAltSayfalar.map(sayfa => (
                 <Link key={sayfa.path} to={sayfa.path} onClick={() => setAnalitikMenu(false)}
@@ -163,18 +157,15 @@ export default function Navbar() {
         </div>
 
         <Link to="/hareketler"
-          className={`flex items-center gap-2 px-4 py-5 text-sm font-medium transition-all duration-200 border-b-2 hover:scale-105
-            ${location.pathname === "/hareketler" ? "border-blue-600 text-blue-600 dark:text-blue-400" : "border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:border-gray-300"}`}>
+          className={`flex items-center gap-2 px-4 py-5 text-sm font-medium transition-all duration-200 border-b-2 hover:scale-105 ss-nav-link ${location.pathname === "/hareketler" ? "ss-nav-link--active" : ""}`}>
           <ArrowLeftRight size={16} />{t.hareketler}
         </Link>
       </div>
 
       {/* Arama */}
       <div className="relative flex-1 max-w-sm">
-        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border transition-all duration-200
-          ${aramaFocus ? "border-blue-500 shadow-md shadow-blue-100 dark:shadow-blue-900" : "border-gray-200 dark:border-gray-700"}
-          bg-gray-50 dark:bg-gray-800`}>
-          <Search size={15} className="text-gray-400 shrink-0" />
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-xl ss-input transition-all duration-200 ${aramaFocus ? "ring-2 ring-cyan-500/30" : ""}`}>
+          <Search size={15} className="ss-ink-dim shrink-0" />
           <input
             type="text"
             value={arama}
@@ -182,7 +173,7 @@ export default function Navbar() {
             onFocus={() => setAramaFocus(true)}
             onBlur={() => setTimeout(() => setAramaFocus(false), 250)}
             placeholder="Ürün ara..."
-            className="bg-transparent text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 outline-none w-full" />
+            className="bg-transparent text-sm ss-ink placeholder:ss-ink-faint outline-none w-full" />
           {arama && (
             <button onClick={() => { setArama(""); setAramaSonuclari([]) }}>
               <X size={14} className="text-gray-400 hover:text-gray-600" />
@@ -191,14 +182,14 @@ export default function Navbar() {
         </div>
 
         {aramaSonuclari.length > 0 && aramaFocus && (
-          <div className="absolute top-12 left-0 w-[480px] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl overflow-hidden z-50">
+          <div className="absolute top-12 left-0 w-[480px] ss-panel overflow-hidden z-50">
 
             {/* Başlık */}
             <div className="px-4 py-2.5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
               <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                 {aramaSonuclari.length} ürün bulundu
               </p>
-              <p className="text-xs text-gray-400">Analitik için ikona tıkla</p>
+              <p className="text-xs text-gray-400">Tahmin ve sipariş için kısayol</p>
             </div>
 
             {aramaSonuclari.map(urun => {
@@ -239,7 +230,7 @@ export default function Navbar() {
                       Tahmin
                     </button>
                     <button
-                      title="EOQ Hesaplama aç"
+                      title="Sipariş önerisi aç"
                       onMouseDown={() => {
                         setArama(""); setAramaSonuclari([])
                         navigate(`/analitik/eoq?urun_id=${urun.urun_id}`)
@@ -248,7 +239,7 @@ export default function Navbar() {
                                  bg-purple-50 hover:bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:hover:bg-purple-800/40 dark:text-purple-400
                                  transition-all hover:scale-105 active:scale-95">
                       <Calculator size={12} />
-                      EOQ
+                      Sipariş
                     </button>
                   </div>
                 </div>
@@ -269,7 +260,7 @@ export default function Navbar() {
             <span className="uppercase font-medium text-xs">{dil}</span>
           </button>
           {dilMenu && (
-            <div className="absolute right-0 top-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl overflow-hidden w-36 z-50">
+            <div className="absolute right-0 top-12 ss-panel overflow-hidden w-36 z-50">
               {[{ kod: "tr", ad: "🇹🇷 Türkçe" }, { kod: "en", ad: "🇬🇧 English" }, { kod: "de", ad: "🇩🇪 Deutsch" }].map(d => (
                 <button key={d.kod} onClick={() => { setDil(d.kod); setDilMenu(false) }}
                   className={`w-full text-left px-4 py-3 text-sm transition-all ${dil === d.kod ? "bg-blue-50 dark:bg-blue-900 text-blue-600 font-medium" : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"}`}>
@@ -293,7 +284,7 @@ export default function Navbar() {
           </button>
 
           {bildirimMenu && (
-            <div className="absolute right-0 top-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl w-80 z-50 overflow-hidden">
+            <div className="absolute right-0 top-12 ss-panel w-80 z-50 overflow-hidden">
               <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                 <div className="flex items-center gap-2">
                   <AlertTriangle size={14} className="text-red-500" />
@@ -355,7 +346,7 @@ export default function Navbar() {
             {kullanici?.initials || "?"}
           </button>
           {profilMenu && (
-            <div className="absolute right-0 top-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl w-52 z-50 overflow-hidden">
+            <div className="absolute right-0 top-12 ss-panel w-52 z-50 overflow-hidden">
               <div className="px-4 py-3.5 border-b border-gray-100 dark:border-gray-700 flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white text-xs font-bold shrink-0">
                   {kullanici?.initials || "?"}

@@ -1,0 +1,42 @@
+---
+description: Glassmorphism tasarım sistemi — CSS tokenlar ve ss-* sınıfları
+globs: frontend/src/**/*.{css,jsx}
+alwaysApply: false
+---
+
+# Tasarım sistemi
+
+Kaynak: `frontend/src/styles/foresto-theme.css` — yeni renk için inline hex yazma.
+
+## Tokenlar (`:root`)
+
+- Arka plan: `--bg-0`, `--bg-gradient`, glow: `--cyan-glow`, `--violet-glow`
+- Yüzey: `--panel`, `--panel-line`, `--panel-hover`, `--blur-panel`
+- Metin: `--ink`, `--ink-dim`, `--ink-faint`
+- Anlam: `--cyan` (vurgu), `--positive`, `--warning`, `--critical`
+- Gölge: `--shadow-panel`, `--shadow-panel-hover`
+- Sayı: `--font-mono`
+
+## Zorunlu sınıflar
+
+- Sabit arka plan (app shell): `AppBackdrop` + `app-shell`
+- Kart / KPI: `ss-card` + `ss-card--hover` (etkileşimli)
+- Panel / dropdown / drawer: `ss-panel` veya `ss-drawer`
+- Metin: `ss-ink`, `ss-ink-dim`, `ss-label`
+- Metrik sayı: `ss-metric`
+- CTA: `ss-btn-primary`
+- Tablo kabı: `ss-table-wrap`
+- Form: `ss-input`
+
+## Kurallar
+
+- Düz gri kart (`bg-white dark:bg-gray-800`) **ekleme** — override var ama hedef `ss-*`
+- Hover: `ss-card--hover` → `translateY(-3px)` + güçlü gölge (CSS'te tanımlı)
+- Login landing: özel inline stil kabul; uygulama içi sayfalar tema sınıflarına uymalı
+- Grafik tooltip: `ss-chart-tooltip` veya tema uyumlu koyu panel
+
+## Login vs app
+
+- Login: tam sayfa pazarlama + screenshot marquee (ayrı inline CSS blokları)
+- App (`Layout`): `foresto-theme.css` + Tailwind yardımcı
+- Logo: `Logo` — lockup (ikon + ore/sto wordmark), Bricolage Grotesque; düz metinde **Foresto**

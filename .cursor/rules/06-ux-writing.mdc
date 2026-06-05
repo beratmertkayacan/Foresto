@@ -1,0 +1,56 @@
+---
+description: Foresto UX yazım dili, terminoloji sözlüğü ve ürün konumlandırması
+alwaysApply: true
+---
+
+# Foresto — UX Yazım Dili
+
+## Ürün konumlandırması (temel ilke)
+
+- Foresto **son kullanıcıya ticari ürün** olarak sunulur.
+- UI'da **yasak:** teknik/akademik jargon, ML model adları (Ridge Regression, K-Means, EOQ, ABC vb.), "demo / test / örnek", ders anlatır uzun açıklamalar, portföy/öğrenci projesi izlenimi.
+- **Kod tabanında korunur:** gerçek ML, doğru teknik isimlendirme, mühendislik derinliği — ürünün çalışması ve kodu inceleyen teknik okuyucu (işe alım, review) için.
+- **Önde:** sade ticari ürün. **Arkada:** gerçek teknik temel.
+- **Pratik:** Algoritma kodda gerçek adıyla (`eoq.py`, Ridge, `abcHesapla`); UI'da yalnızca **sonucun ne işe yaradığı**.
+
+## Ses ve ton
+
+- Kısa, net, kendinden emin **Türkçe**.
+- Profesyonel ama sıcak; **ders anlatmaz**.
+- Yöntem değil, **fayda** yazılır — kullanıcı "bu ne demek?" dememeli.
+
+## Terminoloji sözlüğü (UI — bu eşlemelere uy)
+
+| Eski / teknik | UI'da kullan |
+|---------------|--------------|
+| Dashboard | Genel Bakış |
+| Analitik (menü) | Öngörüler |
+| EOQ / EOQ Analizi / EOQ Hesaplama | Sipariş Önerisi (başlık); gerektiğinde Optimal Sipariş Miktarı |
+| ABC Sınıflandırma / ABC Raporu | Ürün Önceliklendirme |
+| Ridge Regression talep tahmini | Talep Tahmini |
+| KPI & Grafikler | Performans Özeti |
+| Ürün Yönetimi, Stok Hareketleri | Korunur |
+| Stok & Raporlar | Stok Raporları |
+
+- **A / B / C grupları:** öncelik etiketi olarak kalabilir; "ABC analizi" ifadesi UI'da kullanılmaz.
+- **Model doğruluk %:** UI'da gösterme → **Tahmin güvenilirliği:** Yüksek / Orta / Sınırlı (veya kartı kaldır).
+- Nav metinleri için referans: `frontend/src/config/uiCopy.js`.
+- **Logo lockup:** ikon + `oresto` (canlı font); ürün adı metinlerde her zaman **Foresto** — `components/common/Logo.jsx`.
+
+## Yazım kuralları
+
+- **Hoş geldiniz** — iki kelime (`Hoşgeldiniz` değil).
+- Aynı kavram → **aynı terim** her ekranda (Genel Bakış ≠ Dashboard karışımı yok).
+- Kullanıcıya görünen metinde: placeholder anlamsızlığı, lorem, TODO, geliştirici notu yok.
+- Hata mesajları: "Backend çalışıyor mu?", `uvicorn` komutu gibi geliştirici dili yok.
+
+## Yapma
+
+- UI'da algoritma / model / formül adı gösterme (Q*, Wilson, Ridge skoru vb.).
+- Eski terimlere geri kayma; yeni ekranlarda bu sözlüğü uygula.
+- Kodda teknik isimleri UX için sadeleştirme — sadeleştirme **yalnızca kullanıcıya görünen metin**.
+
+## Yap (kod / dokümantasyon ayrı)
+
+- README, `.mdc` bağlam dosyaları, commit/PR: Ridge, EOQ, endpoint, `backend/app/ml/` teknik adlarıyla belgelenebilir.
+- `00-project-context.mdc` modül listesi **teknik bağlam** içindir; kullanıcı metnine kopyalanmaz.

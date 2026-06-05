@@ -1,0 +1,60 @@
+---
+description: Klasör yapısı ve sorumluluk sınırları
+alwaysApply: true
+---
+
+# Mimari
+
+## Repo kökü
+
+```
+Foresto/
+├── backend/          # FastAPI + SQLAlchemy + ML
+├── frontend/         # Vite + React
+└── screenshots/      # Statik görseller (Login import)
+```
+
+## Backend (`backend/app/`)
+
+| Yol | Sorumluluk |
+|-----|------------|
+| `main.py` | App factory, CORS, router mount, `create_all` |
+| `config.py` | `.env` ayarları (`settings`) |
+| `database.py` | Engine, `SessionLocal`, `get_db` |
+| `core/security.py` | JWT, bcrypt |
+| `deps/auth.py` | `get_current_user` |
+| `deps/ownership.py` | `urun_kullaniciya_ait`, `hareket_kullaniciya_ait` |
+| `models/` | SQLAlchemy tabloları (`kullanici_id` sahiplik) |
+| `schemas/` | Pydantic request/response |
+| `routers/` | HTTP endpoint'leri — ince katman, iş mantığı ML veya modelde |
+| `ml/tahmin.py`, `ml/eoq.py` | Hesaplama / model eğitimi |
+| `scripts/` | Geliştirme yardımcıları (ör. `reset_app_data.py`) |
+
+**Yeni endpoint:** ilgili `routers/*.py` + gerekirse `schemas/`; her sorguda `kullanici_id` filtresi.
+
+## Frontend (`frontend/src/`)
+
+| Yol | Sorumluluk |
+|-----|------------|
+| `api/client.js` | Axios instance, Bearer interceptor, 401 → login |
+| `config/constants.js` | API base, storage keys, sayfalama sabitleri |
+| `hooks/` | Paylaşılan React hooks |
+| `components/layout/` | `Layout`, `Navbar`, `AppBackdrop` |
+| `components/common/` | Tekrar kullanılan UI (`EmptyState`) |
+| `components/auth/` | `PrivateRoute`, `PublicRoute` |
+| `pages/*/` | Route-level sayfalar, veri fetch + UI |
+| `styles/foresto-theme.css` | Tasarım tokenları ve `ss-*` sınıfları |
+| `components/common/Logo.jsx` | F-ikon + "oresto" lockup; `public/brand/*.svg` |
+| `App.jsx` | Route tanımları only |
+
+**Yeni sayfa:** `pages/<alan>/` + `App.jsx` route + gerekirse `Navbar` link.
+
+**İş mantığı yeri:**
+
+- Sunucu doğruluk / ML → backend
+- ABC tablosu, grafik birleştirme → ilgili analytics sayfası veya çıkarılmış `utils/` (henüz yoksa sayfa içi fonksiyon, sonra taşınır)
+- Auth state → `localStorage` + `constants.STORAGE_KEYS`
+
+## Vite
+
+- Dev proxy: `/api` → `localhost:8000` (`vite.config.js`)

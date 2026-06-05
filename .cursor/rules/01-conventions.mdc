@@ -1,0 +1,35 @@
+---
+description: Kod stili, isimlendirme ve format kuralları
+alwaysApply: true
+---
+
+# Konvansiyonlar
+
+## Dosya / klasör
+
+- **Frontend sayfalar:** `frontend/src/pages/<alan>/` — `auth`, `dashboard`, `inventory`, `movements`, `analytics` (İngilizce klasör, Türkçe iş alanı dosya adları: `Urunler.jsx`, `Hareketler.jsx` kabul edilir)
+- **Bileşenler:** PascalCase dosya — `Navbar.jsx`, `EmptyState.jsx`
+- **Backend:** snake_case — `stok_hareketi.py`, `urunler.py`
+- **Hook / util / config:** camelCase dosya — `useScrollTrigger.js`, `constants.js`
+
+## Python
+
+- FastAPI router'lar: `app/routers/`, prefix route dosyada (`prefix="/urunler"`)
+- Modeller: `app/models/`, şemalar: `app/schemas/`
+- Import stili: `from app.xxx import yyy` (relative değil, paket kökü `app`)
+- Auth: `Depends(get_current_user)` — veri endpoint'lerinde zorunlu
+- Docstring kısa; gereksiz yorum yok
+
+## React (JSX)
+
+- Fonksiyonel bileşenler + hooks; class component yok
+- Default export: sayfa ve layout bileşenleri
+- API: `import axios from '../../api/client.js'` — path derinliğine göre; `main.jsx` client'ı bir kez yükler
+- Sabitler: `frontend/src/config/constants.js` — magic string dağıtma
+- Tailwind utility + proje sınıfları (`ss-card`, `ss-ink`); yeni ekranlarda düz `bg-white` ekleme
+- Noktalı virgül: mevcut dosyada ne varsa ona uy (karışık projede dosya içi tutarlılık yeterli)
+
+## Dil
+
+- Kullanıcı arayüzü metinleri: Türkçe
+- Kod / değişken: Türkçe alan adları backend'de yaygın (`urun_adi`, `hareket_tipi`) — mevcut API ile uyumlu kal

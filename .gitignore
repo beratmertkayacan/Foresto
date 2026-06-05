@@ -1,32 +1,40 @@
+# Ortam ve gizliler
+.env
+.env.local
+.env.*.local
+backend/.env
+frontend/.env
+
 # Python
 __pycache__/
-*.pyc
-*.pyo
-.env
-venv/
-.venv/
+*.py[cod]
+*$py.class
 *.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# ML modelleri
-backend/app/ml/models/
+# ML model artefaktları (yerel eğitim çıktıları)
+backend/app/ml/models/*.pkl
 
-# Node
+# Node / Frontend build
 node_modules/
-dist/
-.DS_Store
-
-# IDE
-.vscode/settings.json
+frontend/dist/
+frontend/.vite/
 *.log
+npm-debug.log*
 
-# Geçici utility scriptleri
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*~
+
+# Eski / geçici yardımcı scriptler (varsa)
 backend/tarihleri_guncelle.py
 backend/veri_analiz.py
 backend/veri_temizle.py
-backend/demo_*.py
-backend/guncelle_demo.py
-
-# Büyük data dosyaları (import için kullanıldı, repo'da tutulmaz)
-backend/data/stok_hareketleri.csv
-backend/data/siparisler.csv
-backend/data/tedarikciler.csv

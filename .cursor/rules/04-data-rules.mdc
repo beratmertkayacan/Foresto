@@ -1,0 +1,45 @@
+---
+description: Kullanıcı bazlı veri izolasyonu ve boş veri güvenliği
+alwaysApply: true
+---
+
+# Veri kuralları
+
+## İzolasyon (ASLA bozulmaz)
+
+- Sahiplik alanı: `kullanici_id` (DB) — `urunler`, `tedarikciler`, `siparisler`; hareketler `urun` join ile filtrelenir
+- Tüm veri **okuma/yazma:** oturumdaki kullanıcı kapsamında
+- Yeni kayıt: `kullanici_id = current_user.kullanici_id` (create'te set et)
+- `urun_id` / `hareket_id` erişimi: `deps/ownership` ile doğrula — başka kullanıcının kaydına 404
+- Global paylaşımlı veri havuzu yok
+
+## Frontend
+
+- JWT: `api/client.js` interceptor — `Authorization: Bearer`
+- Token/user: `config/constants.js` → `STORAGE_KEYS`
+- Giriş dışı sayfalar: `PrivateRoute` (token + user zorunlu)
+- Public auth: yalnızca `fetch` ile `/auth/login`, `/auth/kullanici-olustur` (login formu)
+
+## Yeni kullanıcı
+
+- Seed veri atanmaz — boş ürün/hareket listesi, KPI 0
+- Empty state göster (`EmptyState`); NaN/undefined UI'da gösterme
+
+## Boş veri / hesaplama
+
+**Backend**
+
+- EOQ: `yillik_talep == 0` veya `H <= 0` → `{"hata": "..."}` (exception değil)
+- Tahmin: yetersiz veri → fallback ortalama; boş dizi dönebilir
+- Dashboard: aggregate boşken 0 / `[]`
+- Kritik stok: `min_stok_seviyesi` ve `mevcut_stok` null iken yanlış kritik sayma
+
+**Frontend**
+
+- Bölme: payda sıfır kontrolü (EOQ, tükenme günü, marj)
+- `?? 0`, `—` veya empty state; `Infinity` / `NaN` render etme
+- ABC: `urunler.length === 0` → boş analiz mesajı
+
+## Geliştirme sıfırlama
+
+Tüm uygulama verisini silmek (şema korunur): `python -m scripts.reset_app_data --onay-evet-sil` — onay bayrağı ve metin girişi zorunlu; production'da otomatik çalışmaz.

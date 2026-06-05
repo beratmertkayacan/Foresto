@@ -5,7 +5,8 @@ from app.database import Base
 class Siparis(Base):
     __tablename__ = "siparisler"
 
-    siparis_id        = Column(Integer, primary_key=True, index=True)
+    siparis_id        = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    kullanici_id      = Column(Integer, ForeignKey("kullanicilar.kullanici_id"), nullable=False, index=True)
     urun_id           = Column(Integer, ForeignKey("urunler.urun_id"))
     tedarikci_id      = Column(Integer, ForeignKey("tedarikciler.tedarikci_id"))
     tarih             = Column(Date)

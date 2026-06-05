@@ -12,7 +12,8 @@ class UrunBase(BaseModel):
     mevcut_stok: Optional[float] = None
 
 class UrunCreate(UrunBase):
-    pass
+    siparis_maliyeti_tl: Optional[float] = 50.0
+    yillik_tutma_maliyeti_oran: Optional[float] = 0.2
 
 class UrunUpdate(BaseModel):
     urun_adi: Optional[str] = None
@@ -23,6 +24,8 @@ class UrunUpdate(BaseModel):
     min_stok_seviyesi: Optional[int] = None
     max_stok_seviyesi: Optional[int] = None
     mevcut_stok: Optional[float] = None
+    siparis_maliyeti_tl: Optional[float] = None
+    yillik_tutma_maliyeti_oran: Optional[float] = None
 
 class UrunResponse(UrunBase):
     urun_id: int

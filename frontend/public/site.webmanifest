@@ -1,0 +1,23 @@
+{
+  "name": "Foresto",
+  "short_name": "Foresto",
+  "description": "Akıllı Envanter Yönetim Sistemi",
+  "icons": [
+    {
+      "src": "/brand/foresto-favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "theme_color": "#070b14",
+  "background_color": "#070b14",
+  "display": "standalone",
+  "lang": "tr"
+}

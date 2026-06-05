@@ -5,7 +5,7 @@ from app.database import Base
 class StokHareketi(Base):
     __tablename__ = "stok_hareketleri"
 
-    hareket_id   = Column(Integer, primary_key=True, index=True)
+    hareket_id   = Column(Integer, primary_key=True, autoincrement=True, index=True)
     urun_id      = Column(Integer, ForeignKey("urunler.urun_id"))
     tarih        = Column(Date, nullable=False)
     hareket_tipi = Column(String)   # "giris" | "cikis"

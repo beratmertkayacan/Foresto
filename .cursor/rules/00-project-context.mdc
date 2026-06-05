@@ -1,0 +1,46 @@
+---
+description: Foresto proje özeti, teknoloji yığını ve ana modüller
+alwaysApply: true
+---
+
+# Foresto — Proje Bağlamı
+
+## Marka
+
+- **Görünen ad:** Foresto
+- **Teknik slug:** `foresto` (package name, storage keys, tema dosyası `foresto-theme.css`)
+
+## Ne
+
+ML destekli envanter yönetimi: ürün kataloğu, stok hareketleri (giriş/çıkış), genel bakış (dashboard API), kullanıcı bazlı veri izolasyonu.
+
+**UI metinleri:** `06-ux-writing.mdc` — kullanıcıya teknik modül adları yansıtılmaz.
+
+## Problem
+
+Stok seviyesi, talep ve sipariş maliyetini tek panelde izlemek; kritik stok ve tahmine dayalı karar desteği.
+
+## Teknoloji (gerçek)
+
+| Katman | Stack |
+|--------|--------|
+| Frontend | React 18, Vite, Tailwind 3, Axios, React Router 6, Recharts, lucide-react |
+| Backend | FastAPI, SQLAlchemy 2, PostgreSQL, python-jose + passlib (JWT) |
+| ML | scikit-learn (Ridge), pandas, numpy, joblib — `backend/app/ml/` |
+
+## Ana modüller (teknik — UI etiketleri: `06-ux-writing.mdc`)
+
+- **Dashboard API** — `GET /analitik/dashboard`: özet metrikler, 30 gün grafik, kategori, son hareketler
+- **Ürünler** — CRUD `/urunler`, kritik liste `/urunler/kritik`
+- **Hareketler** — CRUD `/hareketler`, stok miktarı ürün üzerinden güncellenir
+- **Talep tahmini** — Ridge Regression + fallback ortalama; `/analitik/tahmin/{urun_id}`, `/analitik/gecmis/{urun_id}`
+- **EOQ** — Wilson formülü; `/analitik/eoq/{urun_id}` (`backend/app/ml/eoq.py`)
+- **ABC** — Yalnızca frontend (`pages/analytics/StokRaporlar.jsx`, stok değerine göre A/B/C)
+- **Auth** — `/auth/login`, `/auth/kullanici-olustur`; Bearer JWT zorunlu (veri endpoint'leri)
+
+## Bilinçli sınırlar (uydurma)
+
+- Sipariş modeli var; **sipariş REST API yok**
+- Alembic migration yok; şema `Base.metadata.create_all` ile oluşturulur
+- Seed/demo veri yok; uygulama boş başlar, kullanıcı kaydıyla veri eklenir
+- React Query kullanılmıyor

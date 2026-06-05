@@ -1,0 +1,525 @@
+/* Foresto — ortak tasarım sistemi (login ile uyumlu) */
+
+:root {
+  --bg-0: #070b14;
+  --bg-1: #0b1220;
+  --bg-gradient: linear-gradient(160deg, #0b1220 0%, #070b14 55%, #050810 100%);
+
+  --panel: rgba(18, 28, 46, 0.6);
+  --panel-solid: rgba(18, 28, 46, 0.85);
+  --panel-line: rgba(120, 160, 220, 0.12);
+  --panel-hover: rgba(22, 34, 56, 0.72);
+
+  --cyan: #38bdf8;
+  --cyan-dim: rgba(56, 189, 248, 0.35);
+  --cyan-glow: rgba(56, 189, 248, 0.18);
+  --violet-glow: rgba(99, 102, 241, 0.16);
+
+  --ink: #eef4ff;
+  --ink-dim: #9fb0cc;
+  --ink-faint: rgba(159, 176, 204, 0.55);
+
+  --positive: #34d399;
+  --warning: #fbbf24;
+  --critical: #f87171;
+
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --shadow-panel: 0 20px 50px rgba(0, 0, 0, 0.4);
+  --shadow-panel-hover: 0 28px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(56, 189, 248, 0.08);
+
+  --font-mono: "SF Mono", "Cascadia Code", "Fira Code", ui-monospace, monospace;
+  --blur-panel: 14px;
+
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  background-color: var(--bg-0);
+}
+
+html {
+  background: var(--bg-0);
+}
+
+body {
+  color: var(--ink);
+}
+
+#root {
+  min-height: 100vh;
+  isolation: isolate;
+}
+
+.app-content-layer {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+/* ── Route geçişi ─────────────────────────────────────────────────────────── */
+@keyframes route-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.route-view {
+  animation: route-fade-in 180ms ease-out;
+}
+
+.route-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.route-progress--active {
+  opacity: 1;
+}
+
+.route-progress::after {
+  content: "";
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  box-shadow: 0 0 12px var(--cyan-dim);
+}
+
+.route-progress--active::after {
+  animation: route-progress-run 200ms ease-out forwards;
+}
+
+@keyframes route-progress-run {
+  from { width: 0; margin-left: 0; }
+  to { width: 42%; margin-left: 58%; }
+}
+
+/* ── Auth çözülüyor ───────────────────────────────────────────────────────── */
+.auth-resolving {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.auth-resolving__bar {
+  width: 120px;
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(120, 160, 220, 0.12);
+  overflow: hidden;
+}
+
+.auth-resolving__bar-fill {
+  height: 100%;
+  width: 40%;
+  border-radius: inherit;
+  background: var(--cyan);
+  animation: auth-bar-pulse 1s ease-in-out infinite;
+}
+
+@keyframes auth-bar-pulse {
+  0%, 100% { transform: translateX(-100%); opacity: 0.6; }
+  50% { transform: translateX(220%); opacity: 1; }
+}
+
+/* ── Sayfa yükleyici ──────────────────────────────────────────────────────── */
+.page-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+}
+
+.page-loader--tall {
+  min-height: 60vh;
+}
+
+.page-loader__spark {
+  width: 120px;
+  height: 30px;
+}
+
+.page-loader__spark-line {
+  stroke-dasharray: 140;
+  stroke-dashoffset: 140;
+  animation: spark-draw 1.2s ease-in-out infinite;
+}
+
+@keyframes spark-draw {
+  0% { stroke-dashoffset: 140; opacity: 0.4; }
+  45% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: -20; opacity: 0.4; }
+}
+
+.page-loader__label {
+  font-size: 13px;
+  margin: 0;
+}
+
+/* ── İskelet ────────────────────────────────────────────────────────────── */
+.ss-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(120, 160, 220, 0.06) 0%,
+    rgba(120, 160, 220, 0.14) 50%,
+    rgba(120, 160, 220, 0.06) 100%
+  );
+  background-size: 200% 100%;
+  animation: ss-skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: var(--radius-md);
+}
+
+@keyframes ss-skeleton-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@keyframes ss-aurora-a {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; }
+  50% { transform: translate(36px, -28px) scale(1.07); opacity: 0.72; }
+}
+@keyframes ss-aurora-b {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+  50% { transform: translate(-28px, 22px) scale(1.05); opacity: 0.62; }
+}
+
+/* ── Sabit atmosferik arka plan ─────────────────────────────────────────── */
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background: var(--bg-gradient);
+}
+
+.app-backdrop::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(120, 160, 220, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 160, 220, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 85% 75% at 50% 45%, #000 20%, transparent 72%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 45%, #000 20%, transparent 72%);
+}
+
+.app-backdrop__glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(72px);
+}
+
+.app-backdrop__glow--cyan {
+  top: -8%;
+  left: -6%;
+  width: min(520px, 48vw);
+  height: min(520px, 48vw);
+  background: radial-gradient(circle, var(--cyan-glow) 0%, transparent 68%);
+  animation: ss-aurora-a 16s ease-in-out infinite;
+}
+
+.app-backdrop__glow--violet {
+  bottom: -12%;
+  right: -8%;
+  width: min(480px, 44vw);
+  height: min(480px, 44vw);
+  background: radial-gradient(circle, var(--violet-glow) 0%, transparent 70%);
+  animation: ss-aurora-b 18s ease-in-out infinite;
+}
+
+/* ── Uygulama kabuğu ────────────────────────────────────────────────────── */
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+  color: var(--ink);
+  background: transparent;
+}
+
+.app-shell__main {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Camsı kart ─────────────────────────────────────────────────────────── */
+.ss-card {
+  background: var(--panel);
+  backdrop-filter: blur(var(--blur-panel));
+  -webkit-backdrop-filter: blur(var(--blur-panel));
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+
+.ss-card--hover:hover,
+a.ss-card--hover:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-panel-hover);
+  border-color: rgba(120, 160, 220, 0.22);
+  background: var(--panel-hover);
+}
+
+.ss-card--static {
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.ss-panel {
+  background: var(--panel-solid);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+}
+
+/* ── Navbar cam ─────────────────────────────────────────────────────────── */
+.ss-nav {
+  background: rgba(12, 20, 36, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--panel-line);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.ss-nav-link {
+  color: var(--ink-dim);
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.ss-nav-link:hover {
+  color: var(--ink);
+}
+
+.ss-nav-link--active {
+  color: var(--cyan);
+  border-bottom-color: var(--cyan);
+}
+
+/* ── Tipografi ──────────────────────────────────────────────────────────── */
+.ss-ink { color: var(--ink); }
+.ss-ink-dim { color: var(--ink-dim); }
+.ss-ink-faint { color: var(--ink-faint); }
+.ss-accent { color: var(--cyan); }
+.ss-positive { color: var(--positive); }
+.ss-warning { color: var(--warning); }
+.ss-critical { color: var(--critical); }
+
+.ss-metric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.ss-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+/* ── Form / input (paneller içi) ────────────────────────────────────────── */
+.ss-input {
+  background: rgba(8, 14, 28, 0.55);
+  border: 1px solid var(--panel-line);
+  color: var(--ink);
+  border-radius: var(--radius-md);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ss-input::placeholder {
+  color: var(--ink-faint);
+}
+
+.ss-input:focus {
+  outline: none;
+  border-color: var(--cyan-dim);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+}
+
+/* ── Tablo ───────────────────────────────────────────────────────────────── */
+.ss-table-wrap {
+  background: var(--panel);
+  backdrop-filter: blur(var(--blur-panel));
+  -webkit-backdrop-filter: blur(var(--blur-panel));
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+  overflow: hidden;
+}
+
+.ss-table-wrap thead {
+  background: rgba(10, 18, 32, 0.65);
+  border-bottom: 1px solid var(--panel-line);
+}
+
+.ss-table-wrap th {
+  color: var(--ink-dim);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ss-table-wrap tbody tr {
+  border-bottom: 1px solid rgba(120, 160, 220, 0.06);
+  transition: background 0.15s ease;
+}
+
+.ss-table-wrap tbody tr:hover {
+  background: rgba(56, 189, 248, 0.04);
+}
+
+/* ── Butonlar ───────────────────────────────────────────────────────────── */
+.ss-btn-primary {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(56, 189, 248, 0.18));
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  color: var(--ink);
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(56, 189, 248, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ss-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 32px rgba(56, 189, 248, 0.22);
+}
+
+/* ── Recharts / tooltip uyumu ───────────────────────────────────────────── */
+.ss-chart-tooltip {
+  background: var(--panel-solid) !important;
+  border: 1px solid var(--panel-line) !important;
+  border-radius: var(--radius-md) !important;
+  color: var(--ink) !important;
+  backdrop-filter: blur(12px);
+}
+
+/* Eski Tailwind gri kartları otomatik yükselt (kaçan sınıflar için) */
+.app-shell .bg-white,
+.app-shell .dark\:bg-gray-800,
+.app-shell .dark\:bg-gray-900,
+.app-shell .bg-gray-50 {
+  background: var(--panel) !important;
+  backdrop-filter: blur(var(--blur-panel));
+  -webkit-backdrop-filter: blur(var(--blur-panel));
+  border-color: var(--panel-line) !important;
+  color: var(--ink);
+}
+
+.app-shell .border-gray-100,
+.app-shell .dark\:border-gray-700,
+.app-shell .dark\:border-gray-800 {
+  border-color: var(--panel-line) !important;
+}
+
+.app-shell .text-gray-900,
+.app-shell .dark\:text-white,
+.app-shell .text-gray-800,
+.app-shell .dark\:text-gray-200 {
+  color: var(--ink) !important;
+}
+
+.app-shell .text-gray-400,
+.app-shell .text-gray-500,
+.app-shell .dark\:text-gray-400,
+.app-shell .dark\:text-gray-300 {
+  color: var(--ink-dim) !important;
+}
+
+.app-shell .text-blue-600,
+.app-shell .dark\:text-blue-400 {
+  color: var(--cyan) !important;
+}
+
+/* Tablo / liste kabı — tam genişlik şeritler */
+.app-shell .-mx-8 > .bg-white,
+.app-shell .-mx-8 > .dark\:bg-gray-800 {
+  border-radius: 0 !important;
+}
+
+.app-shell .shadow-sm {
+  box-shadow: var(--shadow-panel);
+}
+
+.app-shell .shadow-lg,
+.app-shell .shadow-xl,
+.app-shell .shadow-2xl {
+  box-shadow: var(--shadow-panel);
+}
+
+/* Slide-over paneller */
+.ss-drawer {
+  background: var(--panel-solid);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid var(--panel-line);
+  box-shadow: -24px 0 60px rgba(0, 0, 0, 0.45);
+}
+
+/* Primary CTA (mevcut mavi butonlar) */
+.app-shell .bg-blue-600 {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.45), rgba(56, 189, 248, 0.22)) !important;
+  border: 1px solid rgba(56, 189, 248, 0.5) !important;
+  color: var(--ink) !important;
+  box-shadow: 0 8px 28px rgba(56, 189, 248, 0.2) !important;
+}
+
+.app-shell .bg-blue-600:hover,
+.app-shell .hover\:bg-blue-700:hover {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.55), rgba(56, 189, 248, 0.3)) !important;
+  transform: translateY(-1px);
+}
+
+/* Recharts eksenleri */
+.app-shell .recharts-cartesian-grid line {
+  stroke: rgba(120, 160, 220, 0.08) !important;
+}
+
+.app-shell .recharts-text {
+  fill: var(--ink-dim) !important;
+}
+
+.app-shell input:not([type="checkbox"]):not([type="radio"]),
+.app-shell select,
+.app-shell textarea {
+  background: rgba(8, 14, 28, 0.55) !important;
+  border-color: var(--panel-line) !important;
+  color: var(--ink) !important;
+}
+
+.app-shell input::placeholder,
+.app-shell textarea::placeholder {
+  color: var(--ink-faint) !important;
+}
+
+.app-shell .bg-gray-100.dark\:bg-gray-800,
+.app-shell .bg-gray-100.dark\:bg-gray-700 {
+  background: rgba(12, 20, 36, 0.55) !important;
+  border: 1px solid var(--panel-line) !important;
+}
+
+.app-shell .dark\:bg-gray-900 {
+  background: var(--panel-solid) !important;
+}

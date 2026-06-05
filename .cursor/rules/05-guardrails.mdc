@@ -1,0 +1,34 @@
+---
+description: Değişiklik yaparken korunacak akışlar ve güvenli çalışma
+alwaysApply: true
+---
+
+# Guardrails
+
+## Bozma
+
+- Çalışan akışlar: login, kayıt, JWT korumalı route'lar, dashboard, ürün/hareket CRUD, analitik endpoint'leri
+- `kullanici_id` izolasyon mantığı
+- Vite `/api` proxy ve axios interceptor zinciri
+
+## Çalışma şekli
+
+- Büyük refactor / toplu silme tek commit'te yapma — aşamalı, küçük diff
+- Kullanılmadığından **emin değilsen silme** — dinamik import, route, script referanslarını kontrol et
+- Her anlamlı değişiklikten sonra: `npm run build` (frontend), backend import/`uvicorn` smoke
+- Özellik kaldırma veya auth değişikliği: kullanıcıya açıkça sor
+
+## Güvenlik
+
+- `SECRET_KEY`, DB URL, şifre → yalnızca `backend/.env` (örnek: `.env.example`)
+- Koda varsayılan production secret ekleme; mevcut dev default'u zayıflatma
+
+## Kapsam disiplini
+
+- İstenmeyen dosyada drive-by refactor yok
+- README / `.cursor/rules` güncellemesi yalnızca yapı veya süreç değişince
+- Pazarlama dili veya olmayan özellik iddiası yazma (portföy dürüstlüğü)
+
+## Emin değilsen
+
+- Dur, kısa soru sor veya `docs` yerine kullanıcıya seçenek sun

@@ -5,7 +5,8 @@ from app.database import Base
 class Urun(Base):
     __tablename__ = "urunler"
 
-    urun_id                    = Column(Integer, primary_key=True, index=True)
+    urun_id                    = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    kullanici_id               = Column(Integer, ForeignKey("kullanicilar.kullanici_id"), nullable=False, index=True)
     urun_adi                   = Column(String, nullable=False)
     kategori                   = Column(String)
     birim                      = Column(String)

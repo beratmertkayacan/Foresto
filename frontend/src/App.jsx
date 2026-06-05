@@ -1,41 +1,51 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
-import Layout from "./components/layout/Layout"
-import Dashboard from "./pages/Dashboard"
-import Urunler from "./pages/Urunler"
-import Hareketler from "./pages/Hareketler"
-import Tahmin from "./pages/analitik/Tahmin"
-import EOQ from "./pages/analitik/EOQ"
-import StokRaporlar from "./pages/analitik/StokRaporlar"
-import Login from "./pages/Login"
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './context/AuthContext.jsx'
+import AppChrome from './components/layout/AppChrome.jsx'
+import RouteFadeLayout from './components/layout/RouteFadeLayout.jsx'
+import Layout from './components/layout/Layout'
+import { PrivateRoute, PublicRoute } from './components/auth/PrivateRoute'
+import AuthResolvingScreen from './components/common/AuthResolvingScreen.jsx'
+import Dashboard from './pages/dashboard/Dashboard'
+import Urunler from './pages/inventory/Urunler'
+import Hareketler from './pages/movements/Hareketler'
+import Tahmin from './pages/analytics/Tahmin'
+import EOQ from './pages/analytics/EOQ'
+import StokRaporlar from './pages/analytics/StokRaporlar'
+import Login from './pages/auth/Login'
+import NotFound from './pages/common/NotFound'
 
-// Giriş yapılmamışsa /login'e yönlendir
-function GizliRoute({ children }) {
-  const kullanici = localStorage.getItem("smartstock_user")
-  if (!kullanici) return <Navigate to="/login" replace />
-  return children
-}
+function AppRoutes() {
+  const { ready } = useAuth()
 
-// Giriş yapılmışsa direkt dashboard'a yönlendir
-function AcikRoute({ children }) {
-  const kullanici = localStorage.getItem("smartstock_user")
-  if (kullanici) return <Navigate to="/" replace />
-  return children
+  if (!ready) {
+    return <AuthResolvingScreen />
+  }
+
+  return (
+    <Routes>
+      <Route element={<RouteFadeLayout />}>
+        <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+        <Route path="/" element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>} />
+        <Route path="/urunler" element={<PrivateRoute><Layout><Urunler /></Layout></PrivateRoute>} />
+        <Route path="/hareketler" element={<PrivateRoute><Layout><Hareketler /></Layout></PrivateRoute>} />
+        <Route path="/analitik" element={<PrivateRoute><Navigate to="/analitik/tahmin" replace /></PrivateRoute>} />
+        <Route path="/analitik/tahmin" element={<PrivateRoute><Layout><Tahmin /></Layout></PrivateRoute>} />
+        <Route path="/analitik/eoq" element={<PrivateRoute><Layout><EOQ /></Layout></PrivateRoute>} />
+        <Route path="/analitik/stok" element={<PrivateRoute><Layout><StokRaporlar /></Layout></PrivateRoute>} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
+  )
 }
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<AcikRoute><Login /></AcikRoute>} />
-        <Route path="/" element={<GizliRoute><Layout><Dashboard /></Layout></GizliRoute>} />
-        <Route path="/urunler" element={<GizliRoute><Layout><Urunler /></Layout></GizliRoute>} />
-        <Route path="/hareketler" element={<GizliRoute><Layout><Hareketler /></Layout></GizliRoute>} />
-        <Route path="/analitik" element={<GizliRoute><Navigate to="/analitik/tahmin" /></GizliRoute>} />
-        <Route path="/analitik/tahmin" element={<GizliRoute><Layout><Tahmin /></Layout></GizliRoute>} />
-        <Route path="/analitik/eoq" element={<GizliRoute><Layout><EOQ /></Layout></GizliRoute>} />
-        <Route path="/analitik/stok" element={<GizliRoute><Layout><StokRaporlar /></Layout></GizliRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AuthProvider>
+        <AppChrome>
+          <AppRoutes />
+        </AppChrome>
+      </AuthProvider>
     </BrowserRouter>
   )
 }

@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from datetime import date, timedelta
 from collections import defaultdict
 from app.database import get_db
 from app.models.urun import Urun
 from app.models.stok_hareketi import StokHareketi
+from app.models.kullanici import Kullanici
+from app.deps.auth import get_current_user
+from app.deps.ownership import urun_kullaniciya_ait
 from app.ml.eoq import eoq_hesapla as eoq_fonksiyon
 from app.ml.tahmin import tahmin_yap
 
@@ -14,15 +17,23 @@ router = APIRouter(prefix="/analitik", tags=["Analitik & ML"])
 AY_KISA = ["Oca","Şub","Mar","Nis","May","Haz","Tem","Ağu","Eyl","Eki","Kas","Ara"]
 
 @router.get("/dashboard")
-def dashboard_ozet(db: Session = Depends(get_db)):  # noqa: C901
+def dashboard_ozet(
+    db: Session = Depends(get_db),
+    kullanici: Kullanici = Depends(get_current_user),
+):  # noqa: C901
     import traceback
 
+    uid = kullanici.kullanici_id
     bugun      = date.today()
 
-    # Son 30 günü bugünden değil, veritabanındaki en son hareket tarihinden geriye say.
-    # Bu sayede eski tarihli test/gerçek verileri de grafiklerde doğru görünür.
+    # Son 30 günü bugünden değil, kullanıcının en son hareket tarihinden geriye say.
     try:
-        son_tarih_raw = db.query(func.max(StokHareketi.tarih)).scalar()
+        son_tarih_raw = (
+            db.query(func.max(StokHareketi.tarih))
+            .join(Urun, StokHareketi.urun_id == Urun.urun_id)
+            .filter(Urun.kullanici_id == uid)
+            .scalar()
+        )
         if isinstance(son_tarih_raw, date):
             son_tarih = son_tarih_raw
         elif isinstance(son_tarih_raw, str):
@@ -37,18 +48,23 @@ def dashboard_ozet(db: Session = Depends(get_db)):  # noqa: C901
 
     # ── Ürün istatistikleri (sadece urunler tablosu, güvenli) ────────────────
     try:
-        toplam_urun = db.query(func.count(Urun.urun_id)).scalar() or 0
-        kritik_urun = db.query(func.count(Urun.urun_id)).filter(
-            Urun.mevcut_stok <= Urun.min_stok_seviyesi
-        ).scalar() or 0
-        stok_degeri = db.query(
+        urun_f = db.query(Urun).filter(Urun.kullanici_id == uid)
+        toplam_urun = urun_f.with_entities(func.count(Urun.urun_id)).scalar() or 0
+        kritik_urun = urun_f.filter(
+            and_(
+                Urun.min_stok_seviyesi.isnot(None),
+                Urun.mevcut_stok.isnot(None),
+                Urun.mevcut_stok <= Urun.min_stok_seviyesi,
+            )
+        ).with_entities(func.count(Urun.urun_id)).scalar() or 0
+        stok_degeri = urun_f.with_entities(
             func.sum(Urun.mevcut_stok * Urun.maliyet_fiyati)
         ).scalar() or 0
-        fiyatlar = db.query(Urun.maliyet_fiyati, Urun.satis_fiyati).filter(
+        fiyatlar = urun_f.filter(
             Urun.maliyet_fiyati != None,
             Urun.satis_fiyati   != None,
-            Urun.satis_fiyati   > 0
-        ).all()
+            Urun.satis_fiyati   > 0,
+        ).with_entities(Urun.maliyet_fiyati, Urun.satis_fiyati).all()
         marjlar = [((s - m) / s * 100) for m, s in fiyatlar if s and s > 0]
         ort_marj = round(sum(marjlar) / len(marjlar), 1) if marjlar else 0
     except Exception:
@@ -61,7 +77,7 @@ def dashboard_ozet(db: Session = Depends(get_db)):  # noqa: C901
             Urun.kategori,
             func.count(Urun.urun_id).label("urun_sayisi"),
             func.sum(Urun.mevcut_stok * Urun.maliyet_fiyati).label("stok_degeri")
-        ).group_by(Urun.kategori).order_by(
+        ).filter(Urun.kullanici_id == uid).group_by(Urun.kategori).order_by(
             func.sum(Urun.mevcut_stok * Urun.maliyet_fiyati).desc()
         ).limit(6).all()
         max_deger = max((r.stok_degeri or 0 for r in kat_rows), default=1)
@@ -87,24 +103,40 @@ def dashboard_ozet(db: Session = Depends(get_db)):  # noqa: C901
     try:
         # tarih kolonu DB'de TEXT olarak saklandığından str() ile karşılaştırıyoruz
         gun_str = str(referans_tarih)
-        bugun_h = db.query(StokHareketi).filter(
-            StokHareketi.tarih >= gun_str,
-            StokHareketi.tarih < str(referans_tarih + timedelta(days=1))
-        ).all()
+        bugun_h = (
+            db.query(StokHareketi)
+            .join(Urun, StokHareketi.urun_id == Urun.urun_id)
+            .filter(
+                Urun.kullanici_id == uid,
+                StokHareketi.tarih >= gun_str,
+                StokHareketi.tarih < str(referans_tarih + timedelta(days=1)),
+            )
+            .all()
+        )
         bugun_giris = sum(1 for h in bugun_h if h.hareket_tipi == "giris")
         bugun_cikis = sum(1 for h in bugun_h if h.hareket_tipi == "cikis")
     except Exception:
         traceback.print_exc()
 
     try:
-        ay_h = db.query(StokHareketi).filter(StokHareketi.tarih >= str(ay_basi)).all()
+        ay_h = (
+            db.query(StokHareketi)
+            .join(Urun, StokHareketi.urun_id == Urun.urun_id)
+            .filter(Urun.kullanici_id == uid, StokHareketi.tarih >= str(ay_basi))
+            .all()
+        )
         bu_ay_alim  = sum(h.miktar * (h.birim_fiyat or 0) for h in ay_h if h.hareket_tipi == "giris")
         bu_ay_satis = sum(h.miktar * (h.birim_fiyat or 0) for h in ay_h if h.hareket_tipi == "cikis")
     except Exception:
         traceback.print_exc()
 
     try:
-        son30_h = db.query(StokHareketi).filter(StokHareketi.tarih >= str(gun30_once)).all()
+        son30_h = (
+            db.query(StokHareketi)
+            .join(Urun, StokHareketi.urun_id == Urun.urun_id)
+            .filter(Urun.kullanici_id == uid, StokHareketi.tarih >= str(gun30_once))
+            .all()
+        )
         gunluk  = defaultdict(lambda: {"alim": 0.0, "satis": 0.0})
         for h in son30_h:
             k = str(h.tarih)[:10]   # "2026-06-01 00:00:00" → "2026-06-01"
@@ -145,6 +177,7 @@ def dashboard_ozet(db: Session = Depends(get_db)):  # noqa: C901
             Urun.birim,
             Urun.kategori,
         ).join(Urun, StokHareketi.urun_id == Urun.urun_id)\
+         .filter(Urun.kullanici_id == uid)\
          .order_by(StokHareketi.hareket_id.desc())\
          .limit(8).all()
 
@@ -183,7 +216,13 @@ def dashboard_ozet(db: Session = Depends(get_db)):  # noqa: C901
 
 
 @router.get("/tahmin/{urun_id}")
-def talep_tahmini(urun_id: int, gun: int = 30, db: Session = Depends(get_db)):
+def talep_tahmini(
+    urun_id: int,
+    gun: int = 30,
+    db: Session = Depends(get_db),
+    kullanici: Kullanici = Depends(get_current_user),
+):
+    urun_kullaniciya_ait(db, urun_id, kullanici)
     try:
         return tahmin_yap(urun_id, gun, db)
     except Exception as e:
@@ -191,7 +230,12 @@ def talep_tahmini(urun_id: int, gun: int = 30, db: Session = Depends(get_db)):
         return {"hata": str(e), "urun_id": urun_id, "gunluk_tahminler": [], "toplam_tahmini_talep": 0, "gunluk_ortalama": 0}
 
 @router.get("/eoq/{urun_id}")
-def eoq_hesapla(urun_id: int, db: Session = Depends(get_db)):
+def eoq_hesapla(
+    urun_id: int,
+    db: Session = Depends(get_db),
+    kullanici: Kullanici = Depends(get_current_user),
+):
+    urun_kullaniciya_ait(db, urun_id, kullanici)
     try:
         return eoq_fonksiyon(urun_id, db)
     except Exception as e:
@@ -199,7 +243,13 @@ def eoq_hesapla(urun_id: int, db: Session = Depends(get_db)):
         return {"hata": str(e)}
 
 @router.get("/gecmis/{urun_id}")
-def gecmis_satislar(urun_id: int, gun: int = 365, db: Session = Depends(get_db)):
+def gecmis_satislar(
+    urun_id: int,
+    gun: int = 365,
+    db: Session = Depends(get_db),
+    kullanici: Kullanici = Depends(get_current_user),
+):
+    urun_kullaniciya_ait(db, urun_id, kullanici)
     """
     Ürünün geçmiş çıkış (satış) verilerini günlük toplamlar hâlinde döndürür.
     - gun: kaç gün geriye bakılacak (varsayılan 365). Referans tarih olarak
@@ -211,7 +261,12 @@ def gecmis_satislar(urun_id: int, gun: int = 365, db: Session = Depends(get_db))
         from collections import defaultdict
 
         # En son hareket tarihini bul (bugün yerine)
-        son_tarih_raw = db.query(func.max(StokHareketi.tarih)).scalar()
+        son_tarih_raw = (
+            db.query(func.max(StokHareketi.tarih))
+            .join(Urun, StokHareketi.urun_id == Urun.urun_id)
+            .filter(Urun.kullanici_id == kullanici.kullanici_id, StokHareketi.urun_id == urun_id)
+            .scalar()
+        )
         if isinstance(son_tarih_raw, date):
             referans = son_tarih_raw
         elif isinstance(son_tarih_raw, str):
@@ -220,12 +275,18 @@ def gecmis_satislar(urun_id: int, gun: int = 365, db: Session = Depends(get_db))
             referans = date.today()
         baslangic = referans - timedelta(days=gun)
 
-        # tarih kolonu DB'de TEXT olarak saklandığından str() ile karşılaştırıyoruz
-        hareketler = db.query(StokHareketi).filter(
-            StokHareketi.urun_id      == urun_id,
-            StokHareketi.hareket_tipi == "cikis",
-            StokHareketi.tarih        >= str(baslangic)
-        ).order_by(StokHareketi.tarih).all()
+        hareketler = (
+            db.query(StokHareketi)
+            .join(Urun, StokHareketi.urun_id == Urun.urun_id)
+            .filter(
+                Urun.kullanici_id == kullanici.kullanici_id,
+                StokHareketi.urun_id == urun_id,
+                StokHareketi.hareket_tipi == "cikis",
+                StokHareketi.tarih >= str(baslangic),
+            )
+            .order_by(StokHareketi.tarih)
+            .all()
+        )
 
         # Aynı tarihteki hareketleri topla (günlük aggregate)
         gunluk: dict = defaultdict(float)
