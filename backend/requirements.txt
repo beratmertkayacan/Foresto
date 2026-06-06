@@ -19,7 +19,7 @@ python-dotenv==1.0.1
 
 # Auth
 python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
 
 # CORS & Yardımcılar
 python-multipart==0.0.9

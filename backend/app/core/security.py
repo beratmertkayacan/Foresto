@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
+
+import bcrypt
 from jose import jwt, JWTError
-from passlib.context import CryptContext
 
 from app.config import settings
 
@@ -8,15 +9,20 @@ SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = "HS256"
 TOKEN_SURE_DK = settings.TOKEN_EXPIRE_MINUTES
 
-pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto")
+_BCRYPT_MAX_BYTES = 72
+
+
+def _sifre_bytes(sifre: str) -> bytes:
+    """bcrypt'in 72 byte sınırına uygun UTF-8 bayt dizisi."""
+    return sifre.encode("utf-8")[:_BCRYPT_MAX_BYTES]
 
 
 def sifreyi_hashle(sifre: str) -> str:
-    return pwd_ctx.hash(sifre)
+    return bcrypt.hashpw(_sifre_bytes(sifre), bcrypt.gensalt()).decode("utf-8")
 
 
 def sifre_dogru_mu(sifre: str, hash_: str) -> bool:
-    return pwd_ctx.verify(sifre, hash_)
+    return bcrypt.checkpw(_sifre_bytes(sifre), hash_.encode("utf-8"))
 
 
 def token_olustur(data: dict) -> str:
