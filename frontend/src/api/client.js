@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { API_BASE, STORAGE_KEYS } from '../config/constants.js'
 
+// API_BASE: lokalde /api (Vite proxy), production'da VITE_API_URL
 axios.defaults.baseURL = API_BASE
 axios.defaults.timeout = 10000
 axios.defaults.headers['Content-Type'] = 'application/json'

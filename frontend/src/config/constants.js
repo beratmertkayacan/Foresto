@@ -1,6 +1,8 @@
 /** Uygulama geneli sabitler */
 
-export const API_BASE = '/api'
+/** Lokal: /api (Vite proxy). Production: VITE_API_URL (Render backend). */
+const viteApi = import.meta.env.VITE_API_URL?.trim().replace(/\/$/, '') || ''
+export const API_BASE = viteApi || '/api'
 
 export const STORAGE_KEYS = {
   token: 'foresto_token',

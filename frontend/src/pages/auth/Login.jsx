@@ -4,17 +4,6 @@ import useScrollTrigger from "../../hooks/useScrollTrigger"
 import { API_BASE, STORAGE_KEYS } from "../../config/constants"
 import { useAuth } from "../../context/AuthContext.jsx"
 import Logo from "../../components/common/Logo.jsx"
-import imgLogin from "../../../../screenshots/login.png"
-import imgGenel from "../../../../screenshots/genelbakıs1.png"
-import imgUrunler from "../../../../screenshots/ürünler1.png"
-import imgKritik from "../../../../screenshots/kritikÜrünler.png"
-import imgHareket1 from "../../../../screenshots/haraketler1.png"
-import imgHareket2 from "../../../../screenshots/haraketler2.png"
-import imgTahmin1 from "../../../../screenshots/regression1.png"
-import imgTahmin2 from "../../../../screenshots/regression2.png"
-import imgEOQ1 from "../../../../screenshots/eoq1.png"
-import imgEOQ2 from "../../../../screenshots/eoq2.png"
-import imgOncelik from "../../../../screenshots/abcAnaliz.png"
 
 // ─── THEME ────────────────────────────────────────────────────────────────
 const T = {
@@ -599,19 +588,19 @@ const SCROLL_SECTIONS = [
   },
 ]
 
-// ─── Kaydırmalı uygulama ekran görüntüleri (sabit, DB yok) ─────────────────
+// ─── Kaydırmalı uygulama ekran görüntüleri (public/screenshots — README ile aynı kaynak) ─
 const APP_SCREENSHOTS = [
-  { src: imgLogin,     title: "Giriş Ekranı",             module: "Foresto" },
-  { src: imgGenel,     title: "Genel Bakış",              module: "Ana Sayfa" },
-  { src: imgUrunler,   title: "Ürün Kataloğu",            module: "Ürünler" },
-  { src: imgKritik,    title: "Kritik Stok",              module: "Ürünler" },
-  { src: imgHareket1,  title: "Dönem Özeti",              module: "Stok Hareketleri" },
-  { src: imgHareket2,  title: "Hareket Kayıtları",        module: "Stok Hareketleri" },
-  { src: imgTahmin1,   title: "30 Gün Tahmini",           module: "Talep Tahmini" },
-  { src: imgTahmin2,   title: "60 Gün Tahmini",           module: "Talep Tahmini" },
-  { src: imgEOQ1,      title: "Sipariş Önerisi",          module: "Sipariş Önerisi" },
-  { src: imgEOQ2,      title: "Stok Seviyesi Simülasyonu", module: "Sipariş Önerisi" },
-  { src: imgOncelik,   title: "Ürün Önceliklendirme",     module: "Stok Raporları" },
+  { src: "/screenshots/login.png",              title: "Giriş Ekranı",             module: "Foresto" },
+  { src: "/screenshots/genelbakıs1.png",         title: "Genel Bakış",              module: "Ana Sayfa" },
+  { src: "/screenshots/ürünler1.png",            title: "Ürün Kataloğu",            module: "Ürünler" },
+  { src: "/screenshots/kritikÜrünler.png",      title: "Kritik Stok",              module: "Ürünler" },
+  { src: "/screenshots/hareketler1.png",        title: "Dönem Özeti",              module: "Stok Hareketleri" },
+  { src: "/screenshots/hareketler2.png",        title: "Hareket Kayıtları",        module: "Stok Hareketleri" },
+  { src: "/screenshots/regression1.png",        title: "30 Gün Tahmini",           module: "Talep Tahmini" },
+  { src: "/screenshots/regression2.png",        title: "60 Gün Tahmini",           module: "Talep Tahmini" },
+  { src: "/screenshots/eoq1.png",               title: "Sipariş Önerisi",          module: "Sipariş Önerisi" },
+  { src: "/screenshots/eoq2.png",               title: "Stok Seviyesi Simülasyonu", module: "Sipariş Önerisi" },
+  { src: "/screenshots/abcAnaliz.png",          title: "Ürün Önceliklendirme",     module: "Stok Raporları" },
 ]
 
 const SHOTS_ROW_A = APP_SCREENSHOTS
